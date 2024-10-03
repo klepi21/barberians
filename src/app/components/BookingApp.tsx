@@ -429,7 +429,7 @@ export default function BookingApp() {
         </div>
 
         {selectedDate && (
-          <div className="mb-6 glass-effect rounded-xl p-4">
+          <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '200px' }}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-bold text-gray-400">ΩΡΑ</h3>
               <div className="flex space-x-2">
