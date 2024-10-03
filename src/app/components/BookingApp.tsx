@@ -76,11 +76,13 @@ export default function BookingApp() {
   }
 
   const fetchWorkingHours = async () => {
-    const { data, error } = await supabase.from('working_hours').select('*')
+    const { data: workingHours, error } = await supabase
+      .from('working_hours')
+      .select('id, day_of_week, start_time, end_time')
     if (error) {
       console.error('Error fetching working hours:', error)
     } else {
-      setWorkingHours(data)
+      setWorkingHours(workingHours)
     }
   }
 
@@ -94,7 +96,7 @@ export default function BookingApp() {
   }
 
   const fetchAvailableTimes = async (date: Date) => {
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
+    const dayOfWeek = date.getDay()
     const dateString = format(date, 'yyyy-MM-dd')
 
     // Check if it's a special day
@@ -298,8 +300,7 @@ export default function BookingApp() {
     if (specialDay) {
       return specialDay.start_time === '00:00' && specialDay.end_time === '00:00'
     }
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
-    const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
+    const workingDay = workingHours.find(wh => wh.day_of_week === date.getDay())
     return date < today || !workingDay
   }
 
