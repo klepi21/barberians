@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
 import { PostgrestError } from '@supabase/supabase-js'
-import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay } from 'date-fns'
+import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 10, duration: 45 },
@@ -76,13 +76,11 @@ export default function BookingApp() {
   }
 
   const fetchWorkingHours = async () => {
-    const { data: workingHours, error } = await supabase
-      .from('working_hours')
-      .select('id, day_of_week, start_time, end_time')
+    const { data, error } = await supabase.from('working_hours').select('*')
     if (error) {
       console.error('Error fetching working hours:', error)
     } else {
-      setWorkingHours(workingHours)
+      setWorkingHours(data)
     }
   }
 
@@ -96,7 +94,7 @@ export default function BookingApp() {
   }
 
   const fetchAvailableTimes = async (date: Date) => {
-    const dayOfWeek = date.getDay()
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
     const dateString = format(date, 'yyyy-MM-dd')
 
     // Check if it's a special day
@@ -107,12 +105,12 @@ export default function BookingApp() {
         return
       }
       // Use special hours
-      generateTimeSlots(specialDay.start_time, specialDay.end_time, date)
+      await generateTimeSlots(specialDay.start_time, specialDay.end_time, date)
     } else {
       // Use regular working hours
       const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
       if (workingDay) {
-        generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
+        await generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
       } else {
         setAvailableTimes([]) // Shop is closed
       }
@@ -143,7 +141,8 @@ export default function BookingApp() {
 
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {
-      const slotStart = parse(slot, 'HH:mm', date)
+      const [hours, minutes] = slot.split(':').map(Number)
+      const slotStart = setMinutes(setHours(date, hours), minutes)
       const slotEnd = addMinutes(slotStart, 30)
       return !bookings.some(booking => {
         const bookingStart = parse(booking.time, 'HH:mm', date)
@@ -151,7 +150,8 @@ export default function BookingApp() {
         return (
           (isAfter(bookingStart, slotStart) && isBefore(bookingStart, slotEnd)) ||
           (isAfter(bookingEnd, slotStart) && isBefore(bookingEnd, slotEnd)) ||
-          (isBefore(bookingStart, slotStart) && isAfter(bookingEnd, slotEnd))
+          (isBefore(bookingStart, slotStart) && isAfter(bookingEnd, slotEnd)) ||
+          isSameDay(bookingStart, slotStart)
         )
       })
     })
@@ -200,9 +200,6 @@ export default function BookingApp() {
     }
 
     setIsLoading(true)
-    // Create a new Date object with the selected date and set the time to noon
-    const bookingDate = new Date(selectedDate)
-    bookingDate.setHours(12, 0, 0, 0)
     
     try {
       // First, check if the user exists
@@ -250,14 +247,15 @@ export default function BookingApp() {
         .from('bookings')
         .insert([
           {
-            date: bookingDate.toISOString().split('T')[0],
+            date: format(selectedDate, 'yyyy-MM-dd'),
             time: selectedTime,
             service: selectedService,
             fullname: bookingDetails.fullName,
             phonenumber: bookingDetails.phoneNumber,
             email: bookingDetails.email,
             status: 'pending',
-            user_id: userId // Link the booking to the user
+            user_id: userId,
+            duration: services.find(s => s.name === selectedService)?.duration || 45
           }
         ])
 
@@ -269,6 +267,9 @@ export default function BookingApp() {
         title: "Success",
         description: "Your booking has been created successfully.",
       })
+
+      // Refresh available times after successful booking
+      fetchAvailableTimes(selectedDate)
     } catch (error) {
       console.error('Error creating booking:', error)
       toast({
@@ -300,7 +301,8 @@ export default function BookingApp() {
     if (specialDay) {
       return specialDay.start_time === '00:00' && specialDay.end_time === '00:00'
     }
-    const workingDay = workingHours.find(wh => wh.day_of_week === date.getDay())
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
+    const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
     return date < today || !workingDay
   }
 
