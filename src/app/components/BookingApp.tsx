@@ -149,7 +149,7 @@ export default function BookingApp() {
       const slotStart = parse(slot, 'HH:mm', date)
       const slotEnd = addMinutes(slotStart, 30)
       const isAvailable = !bookings.some(booking => {
-        const bookingStart = parse(booking.time, 'HH:mm', date)
+        const bookingStart = parse(booking.time, 'HH:mm:ss', date)
         const bookingEnd = addMinutes(bookingStart, booking.duration || 45)
         const overlap = (
           (isEqual(slotStart, bookingStart) || isEqual(slotEnd, bookingEnd)) ||
