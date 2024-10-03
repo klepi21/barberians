@@ -150,7 +150,7 @@ export default function BookingApp() {
 
   const scroll = (scrollOffset: number) => {
     if (timeRef.current) {
-      timeRef.current.scrollBy({ top: scrollOffset, behavior: 'smooth' })
+      timeRef.current.scrollBy({ left: scrollOffset, behavior: 'smooth' })
     }
   }
 
@@ -280,7 +280,7 @@ export default function BookingApp() {
             </div>
             <div 
               ref={timeRef}
-              className="grid grid-cols-3 gap-2 overflow-y-auto max-h-40 scrollbar-hide py-2"
+              className="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide"
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
@@ -291,7 +291,7 @@ export default function BookingApp() {
                 <Button
                   key={time}
                   variant={selectedTime === time ? "secondary" : "ghost"}
-                  className={`p-2 ${
+                  className={`flex-shrink-0 w-16 h-10 ${
                     selectedTime === time
                       ? 'bg-white text-black hover:bg-gray-200'
                       : isTimeDisabled(time)
