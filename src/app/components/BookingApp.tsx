@@ -11,7 +11,9 @@ import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from '@/utils/supabase'
-import { Service, Booking } from '@/app/types/bookings'
+import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
+import { PostgrestError } from '@supabase/supabase-js'
+import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 10, duration: 45 },
@@ -35,13 +37,11 @@ export default function BookingApp() {
   const [isLoading, setIsLoading] = useState(false)
   const [mathChallenge, setMathChallenge] = useState({ num1: 0, num2: 0, answer: '' })
   const timeRef = useRef<HTMLDivElement>(null)
+  const [workingHours, setWorkingHours] = useState<WorkingHours[]>([])
+  const [specialHours, setSpecialHours] = useState<SpecialHours[]>([])
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
 
   const { toast } = useToast()
-
-  const times = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-    '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
-  ]
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -57,7 +57,15 @@ export default function BookingApp() {
 
   useEffect(() => {
     fetchServices()
+    fetchWorkingHours()
+    fetchSpecialHours()
   }, [])
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchAvailableTimes(selectedDate)
+    }
+  }, [selectedDate])
 
   const fetchServices = async () => {
     setIsLoading(true)
@@ -65,6 +73,88 @@ export default function BookingApp() {
     await new Promise(resolve => setTimeout(resolve, 500))
     setServices(HARDCODED_SERVICES)
     setIsLoading(false)
+  }
+
+  const fetchWorkingHours = async () => {
+    const { data, error } = await supabase.from('working_hours').select('*')
+    if (error) {
+      console.error('Error fetching working hours:', error)
+    } else {
+      setWorkingHours(data)
+    }
+  }
+
+  const fetchSpecialHours = async () => {
+    const { data, error } = await supabase.from('special_hours').select('*')
+    if (error) {
+      console.error('Error fetching special hours:', error)
+    } else {
+      setSpecialHours(data)
+    }
+  }
+
+  const fetchAvailableTimes = async (date: Date) => {
+    const dayOfWeek = date.getDay()
+    const dateString = format(date, 'yyyy-MM-dd')
+
+    // Check if it's a special day
+    const specialDay = specialHours.find(sh => sh.date === dateString)
+    if (specialDay) {
+      if (specialDay.start_time === '00:00' && specialDay.end_time === '00:00') {
+        setAvailableTimes([]) // Shop is closed
+        return
+      }
+      // Use special hours
+      generateTimeSlots(specialDay.start_time, specialDay.end_time, date)
+    } else {
+      // Use regular working hours
+      const workingDay = workingHours.find(wh => wh.day === dayOfWeek)
+      if (workingDay && workingDay.is_open) {
+        generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
+      } else {
+        setAvailableTimes([]) // Shop is closed
+      }
+    }
+  }
+
+  const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
+    const start = parse(startTime, 'HH:mm', new Date())
+    const end = parse(endTime, 'HH:mm', new Date())
+    const slots: string[] = []
+
+    let current = start
+    while (isBefore(current, end)) {
+      slots.push(format(current, 'HH:mm'))
+      current = addMinutes(current, 30) // 30-minute intervals
+    }
+
+    // Fetch bookings for the selected date
+    const { data: bookings, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('date', format(date, 'yyyy-MM-dd'))
+
+    if (error) {
+      console.error('Error fetching bookings:', error)
+      return
+    }
+
+    // Filter out booked slots
+    const availableSlots = slots.filter(slot => {
+      const slotStart = parse(slot, 'HH:mm', date)
+      const slotEnd = addMinutes(slotStart, 30)
+      return !bookings.some(booking => {
+        const bookingStart = parse(booking.time, 'HH:mm', date)
+        const bookingEnd = addMinutes(bookingStart, booking.duration || 45) // Assuming default duration of 45 minutes
+        return (
+          (isAfter(bookingStart, slotStart) && isBefore(bookingStart, slotEnd)) ||
+          (isAfter(bookingEnd, slotStart) && isBefore(bookingEnd, slotEnd)) ||
+          (isBefore(bookingStart, slotStart) && isAfter(bookingEnd, slotEnd))
+        )
+      })
+    })
+
+    setAvailableTimes(availableSlots)
   }
 
   const toggleService = (serviceName: string) => {
@@ -112,35 +202,80 @@ export default function BookingApp() {
     const bookingDate = new Date(selectedDate)
     bookingDate.setHours(12, 0, 0, 0)
     
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert([
-        {
-          date: bookingDate.toISOString().split('T')[0], // Use the adjusted date
-          time: selectedTime,
-          service: selectedService,
-          fullname: bookingDetails.fullName,
-          phonenumber: bookingDetails.phoneNumber,
-          email: bookingDetails.email,
-          status: 'pending'
-        }
-      ])
+    try {
+      // First, check if the user exists
+      const { data: existingUser, error: userError } = await supabase
+        .from('users')
+        .select('id, booking_count')
+        .eq('email', bookingDetails.email)
+        .single()
 
-    setIsLoading(false)
-    if (error) {
-      console.error('Error creating booking:', error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create booking. Please try again.",
-      })
-    } else {
+      if (userError && userError.code !== 'PGRST116') {
+        throw userError
+      }
+
+      let userId: number
+
+      if (existingUser) {
+        // User exists, update their booking count
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ booking_count: (existingUser.booking_count || 0) + 1 })
+          .eq('id', existingUser.id)
+
+        if (updateError) throw updateError
+        userId = existingUser.id
+      } else {
+        // User doesn't exist, create a new user
+        const { data: newUser, error: insertError } = await supabase
+          .from('users')
+          .insert({
+            full_name: bookingDetails.fullName,
+            email: bookingDetails.email,
+            telephone: bookingDetails.phoneNumber,
+            booking_count: 1
+          })
+          .select('id')
+          .single()
+
+        if (insertError) throw insertError
+        if (!newUser) throw new Error('Failed to create new user')
+        userId = newUser.id
+      }
+
+      // Now create the booking
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .insert([
+          {
+            date: bookingDate.toISOString().split('T')[0],
+            time: selectedTime,
+            service: selectedService,
+            fullname: bookingDetails.fullName,
+            phonenumber: bookingDetails.phoneNumber,
+            email: bookingDetails.email,
+            status: 'pending',
+            user_id: userId // Link the booking to the user
+          }
+        ])
+
+      if (bookingError) throw bookingError
+
       setIsBookingDialogOpen(false)
       setIsSuccessDialogOpen(true)
       toast({
         title: "Success",
         description: "Your booking has been created successfully.",
       })
+    } catch (error) {
+      console.error('Error creating booking:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create booking. Please try again.",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -158,16 +293,13 @@ export default function BookingApp() {
   }
 
   const isDateDisabled = (date: Date) => {
-    return date < today || date.getDay() === 0 || date.getDay() === 1
-  }
-
-  const isTimeDisabled = (time: string) => {
-    if (!selectedDate) return true
-    if (selectedDate.getTime() !== today.getTime()) return false
-    const [hours, minutes] = time.split(':').map(Number)
-    const selectedDateTime = new Date(selectedDate)
-    selectedDateTime.setHours(hours, minutes, 0, 0)
-    return selectedDateTime <= new Date()
+    const dateString = format(date, 'yyyy-MM-dd')
+    const specialDay = specialHours.find(sh => sh.date === dateString)
+    if (specialDay) {
+      return specialDay.start_time === '00:00' && specialDay.end_time === '00:00'
+    }
+    const workingDay = workingHours.find(wh => wh.day === date.getDay())
+    return date < today || !workingDay || !workingDay.is_open
   }
 
   const scroll = (scrollOffset: number) => {
@@ -309,19 +441,16 @@ export default function BookingApp() {
                 WebkitOverflowScrolling: 'touch'
               }}
             >
-              {times.map((time) => (
+              {availableTimes.map((time) => (
                 <Button
                   key={time}
                   variant={selectedTime === time ? "secondary" : "ghost"}
                   className={`flex-shrink-0 w-16 h-10 font-bold ${
                     selectedTime === time
                       ? 'bg-white text-black hover:bg-gray-200'
-                      : isTimeDisabled(time)
-                      ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-gray-800'
                   }`}
-                  onClick={() => !isTimeDisabled(time) && setSelectedTime(time)}
-                  disabled={isTimeDisabled(time)}
+                  onClick={() => setSelectedTime(time)}
                 >
                   {time}
                 </Button>
@@ -491,23 +620,17 @@ export default function BookingApp() {
               <Check className="h-10 w-10 text-white" />
             </div>
             <p className="text-center mb-6">
-              Σας έχουμε στείλει ένα email επιβεβαίωσης με όλες τις λεπτομέρειες του ραντεβού σας.
+              Σας έχουμε στείλει ένα email επιβεβαίωσης με τις λεπτομέρειες του ραντεβού σας. Ανυπομονούμε να σας δούμε!
             </p>
-            <Button className="w-full bg-orange-400 text-black hover:bg-orange-500 rounded-xl" onClick={() => setIsSuccessDialogOpen(false)}>
-              Κλείσιμο
+            <Button 
+              className="w-full bg-green-500 text-black hover:bg-green-600 rounded-xl" 
+              onClick={() => setIsSuccessDialogOpen(false)}
+            >
+              Εντάξει
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-
-      <style jsx global>{`
-        .glass-effect {
-          background: rgba(255, 165, 0, 0.05);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 165, 0, 0.1);
-          box-shadow: 0 8px 32px 0 rgba(255, 165, 0, 0.2);
-        }
-      `}</style>
     </div>
   )
 }
