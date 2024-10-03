@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
 import { PostgrestError } from '@supabase/supabase-js'
-import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
+import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 10, duration: 45 },
@@ -94,7 +94,7 @@ export default function BookingApp() {
   }
 
   const fetchAvailableTimes = async (date: Date) => {
-    const dayOfWeek = date.getDay()
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
     const dateString = format(date, 'yyyy-MM-dd')
 
     // Check if it's a special day
@@ -108,7 +108,7 @@ export default function BookingApp() {
       generateTimeSlots(specialDay.start_time, specialDay.end_time, date)
     } else {
       // Use regular working hours
-      const workingDay = workingHours.find(wh => wh.day === dayOfWeek)
+      const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
       if (workingDay) {
         generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
       } else {
@@ -118,8 +118,8 @@ export default function BookingApp() {
   }
 
   const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
-    const start = parse(startTime, 'HH:mm', new Date())
-    const end = parse(endTime, 'HH:mm', new Date())
+    const start = parse(startTime, 'HH:mm:ss', new Date())
+    const end = parse(endTime, 'HH:mm:ss', new Date())
     const slots: string[] = []
 
     let current = start
@@ -298,7 +298,8 @@ export default function BookingApp() {
     if (specialDay) {
       return specialDay.start_time === '00:00' && specialDay.end_time === '00:00'
     }
-    const workingDay = workingHours.find(wh => wh.day === date.getDay())
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
+    const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
     return date < today || !workingDay
   }
 
