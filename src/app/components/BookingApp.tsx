@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
 import { PostgrestError } from '@supabase/supabase-js'
-import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes } from 'date-fns'
+import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 10, duration: 45 },
@@ -118,8 +118,8 @@ export default function BookingApp() {
   }
 
   const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
-    const start = parse(startTime, 'HH:mm:ss', new Date())
-    const end = parse(endTime, 'HH:mm:ss', new Date())
+    const start = parse(startTime, 'HH:mm:ss', date)
+    const end = parse(endTime, 'HH:mm:ss', date)
     const slots: string[] = []
 
     let current = start
@@ -141,17 +141,16 @@ export default function BookingApp() {
 
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {
-      const [hours, minutes] = slot.split(':').map(Number)
-      const slotStart = setMinutes(setHours(date, hours), minutes)
+      const slotStart = parse(slot, 'HH:mm', date)
       const slotEnd = addMinutes(slotStart, 30)
       return !bookings.some(booking => {
         const bookingStart = parse(booking.time, 'HH:mm', date)
-        const bookingEnd = addMinutes(bookingStart, booking.duration || 45) // Assuming default duration of 45 minutes
+        const bookingEnd = addMinutes(bookingStart, booking.duration || 45)
         return (
-          (isAfter(bookingStart, slotStart) && isBefore(bookingStart, slotEnd)) ||
-          (isAfter(bookingEnd, slotStart) && isBefore(bookingEnd, slotEnd)) ||
-          (isBefore(bookingStart, slotStart) && isAfter(bookingEnd, slotEnd)) ||
-          isSameDay(bookingStart, slotStart)
+          (isEqual(slotStart, bookingStart) || isEqual(slotEnd, bookingEnd)) ||
+          (isAfter(slotStart, bookingStart) && isBefore(slotStart, bookingEnd)) ||
+          (isAfter(slotEnd, bookingStart) && isBefore(slotEnd, bookingEnd)) ||
+          (isBefore(slotStart, bookingStart) && isAfter(slotEnd, bookingEnd))
         )
       })
     })
