@@ -12,7 +12,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking } from '@/app/types/bookings'
-import ReCAPTCHA from "react-google-recaptcha"
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 10, duration: 45 },
@@ -34,9 +33,8 @@ export default function BookingApp() {
   })
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [captchaValue, setCaptchaValue] = useState<string | null>(null)
+  const [mathChallenge, setMathChallenge] = useState({ num1: 0, num2: 0, answer: '' })
   const timeRef = useRef<HTMLDivElement>(null)
-  const recaptchaRef = useRef<ReCAPTCHA>(null)
 
   const { toast } = useToast()
 
@@ -84,17 +82,27 @@ export default function BookingApp() {
     ? services.find(s => s.name === selectedService)?.price || 0 
     : 0
 
+  const generateMathChallenge = () => {
+    const num1 = Math.floor(Math.random() * 10)
+    const num2 = Math.floor(Math.random() * 10)
+    setMathChallenge({ num1, num2, answer: '' })
+  }
+
   const handleBookNow = () => {
     setIsBookingDialogOpen(true)
+    generateMathChallenge()
   }
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedDate || !selectedTime || !selectedService || !captchaValue) {
+    if (!selectedDate || !selectedTime || !selectedService) return
+
+    const correctAnswer = mathChallenge.num1 + mathChallenge.num2
+    if (parseInt(mathChallenge.answer) !== correctAnswer) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please fill in all fields and complete the CAPTCHA.",
+        description: "Incorrect answer to the math challenge. Please try again.",
       })
       return
     }
@@ -130,12 +138,6 @@ export default function BookingApp() {
         description: "Your booking has been created successfully.",
       })
     }
-
-    // Reset CAPTCHA after submission
-    if (recaptchaRef.current) {
-      recaptchaRef.current.reset()
-    }
-    setCaptchaValue(null)
   }
 
   const changeMonth = (offset: number) => {
@@ -441,19 +443,27 @@ export default function BookingApp() {
                 <span className="font-semibold text-orange-400">{totalPrice}€</span>
               </div>
             </div>
-            <div className="flex justify-center">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey="6Ld8nVYqAAAAAAp8hrXx9w2ZBUcAprKYxuY4io9X"
-                onChange={(value: string | null) => setCaptchaValue(value)}
-                theme="dark"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="mathChallenge" className="text-sm font-medium text-gray-400">
+                Παρακαλώ λύστε αυτό το απλό μαθηματικό πρόβλημα:
+              </Label>
+              <div className="flex items-center space-x-2">
+                <span>{mathChallenge.num1} + {mathChallenge.num2} =</span>
+                <Input
+                  id="mathChallenge"
+                  type="number"
+                  className="w-20 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
+                  value={mathChallenge.answer}
+                  onChange={(e) => setMathChallenge({...mathChallenge, answer: e.target.value})}
+                  required
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button 
                 type="submit" 
                 className="w-full bg-orange-400 text-black hover:bg-orange-500 rounded-xl" 
-                disabled={isLoading || !captchaValue}
+                disabled={isLoading}
               >
                 {isLoading ? 'Επεξεργασία...' : 'Επιβεβαίωση Κράτησης'}
               </Button>
