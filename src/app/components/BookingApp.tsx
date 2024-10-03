@@ -108,11 +108,15 @@ export default function BookingApp() {
     }
 
     setIsLoading(true)
+    // Create a new Date object with the selected date and set the time to noon
+    const bookingDate = new Date(selectedDate)
+    bookingDate.setHours(12, 0, 0, 0)
+    
     const { data, error } = await supabase
       .from('bookings')
       .insert([
         {
-          date: selectedDate.toISOString().split('T')[0],
+          date: bookingDate.toISOString().split('T')[0], // Use the adjusted date
           time: selectedTime,
           service: selectedService,
           fullname: bookingDetails.fullName,
