@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking } from '@/app/types/bookings'
+import ReCAPTCHA from "react-google-recaptcha"
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 10, duration: 45 },
@@ -33,7 +34,9 @@ export default function BookingApp() {
   })
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null)
   const timeRef = useRef<HTMLDivElement>(null)
+  const recaptchaRef = useRef<ReCAPTCHA>(null)
 
   const { toast } = useToast()
 
@@ -87,7 +90,14 @@ export default function BookingApp() {
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedDate || !selectedTime || !selectedService) return
+    if (!selectedDate || !selectedTime || !selectedService || !captchaValue) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all fields and complete the CAPTCHA.",
+      })
+      return
+    }
 
     setIsLoading(true)
     const { data, error } = await supabase
@@ -120,6 +130,12 @@ export default function BookingApp() {
         description: "Your booking has been created successfully.",
       })
     }
+
+    // Reset CAPTCHA after submission
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset()
+    }
+    setCaptchaValue(null)
   }
 
   const changeMonth = (offset: number) => {
@@ -204,7 +220,7 @@ export default function BookingApp() {
       <div className="p-4">
         <div className="mb-6 glass-effect rounded-xl p-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">{greekMonths[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
+            <h2 className="text-xl font-bold">{greekMonths[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
             <div className="flex space-x-2">
               <Button
                 variant="ghost"
@@ -225,7 +241,7 @@ export default function BookingApp() {
           </div>
           <div className="grid grid-cols-7 gap-1 mb-2">
             {greekDays.map(day => (
-              <div key={day} className="text-center text-sm text-gray-400">{day}</div>
+              <div key={day} className="text-center text-sm font-bold text-gray-400">{day}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-1">
@@ -240,7 +256,7 @@ export default function BookingApp() {
                 <Button
                   key={index}
                   variant={isSelected ? "secondary" : "ghost"}
-                  className={`h-10 ${
+                  className={`h-10 font-bold ${
                     isSelected
                       ? 'bg-white text-black hover:bg-gray-200'
                       : isDisabled
@@ -260,7 +276,7 @@ export default function BookingApp() {
         {selectedDate && (
           <div className="mb-6 glass-effect rounded-xl p-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm text-gray-400">ΩΡΑ</h3>
+              <h3 className="text-sm font-bold text-gray-400">ΩΡΑ</h3>
               <div className="flex space-x-2">
                 <Button
                   variant="ghost"
@@ -291,7 +307,7 @@ export default function BookingApp() {
                 <Button
                   key={time}
                   variant={selectedTime === time ? "secondary" : "ghost"}
-                  className={`flex-shrink-0 w-16 h-10 ${
+                  className={`flex-shrink-0 w-16 h-10 font-bold ${
                     selectedTime === time
                       ? 'bg-white text-black hover:bg-gray-200'
                       : isTimeDisabled(time)
@@ -425,8 +441,20 @@ export default function BookingApp() {
                 <span className="font-semibold text-orange-400">{totalPrice}€</span>
               </div>
             </div>
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey="6Ld8nVYqAAAAAAp8hrXx9w2ZBUcAprKYxuY4io9X"
+                onChange={(value: string | null) => setCaptchaValue(value)}
+                theme="dark"
+              />
+            </div>
             <DialogFooter>
-              <Button type="submit" className="w-full bg-orange-400 text-black hover:bg-orange-500 rounded-xl" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full bg-orange-400 text-black hover:bg-orange-500 rounded-xl" 
+                disabled={isLoading || !captchaValue}
+              >
                 {isLoading ? 'Επεξεργασία...' : 'Επιβεβαίωση Κράτησης'}
               </Button>
             </DialogFooter>
