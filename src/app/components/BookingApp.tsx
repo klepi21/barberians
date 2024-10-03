@@ -109,7 +109,7 @@ export default function BookingApp() {
     } else {
       // Use regular working hours
       const workingDay = workingHours.find(wh => wh.day === dayOfWeek)
-      if (workingDay && workingDay.is_open) {
+      if (workingDay) {
         generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
       } else {
         setAvailableTimes([]) // Shop is closed
@@ -299,7 +299,7 @@ export default function BookingApp() {
       return specialDay.start_time === '00:00' && specialDay.end_time === '00:00'
     }
     const workingDay = workingHours.find(wh => wh.day === date.getDay())
-    return date < today || !workingDay || !workingDay.is_open
+    return date < today || !workingDay
   }
 
   const scroll = (scrollOffset: number) => {

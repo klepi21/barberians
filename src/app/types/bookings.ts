@@ -15,3 +15,17 @@ export interface Booking {
     price: number
     duration: number
   }
+
+  export interface WorkingHours {
+    id?: number;
+    day: number;
+    start_time: string;
+    end_time: string;
+  }
+  
+  export interface SpecialHours {
+    id?: number;
+    date: string;
+    start_time: string;
+    end_time: string;
+  }
