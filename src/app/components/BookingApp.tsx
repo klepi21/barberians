@@ -118,6 +118,7 @@ export default function BookingApp() {
   }
 
   const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
+    console.log('Generating time slots for:', format(date, 'yyyy-MM-dd'))
     const start = parse(startTime, 'HH:mm:ss', date)
     const end = parse(endTime, 'HH:mm:ss', date)
     const slots: string[] = []
@@ -127,6 +128,8 @@ export default function BookingApp() {
       slots.push(format(current, 'HH:mm'))
       current = addMinutes(current, 30) // 30-minute intervals
     }
+
+    console.log('All possible slots:', slots)
 
     // Fetch bookings for the selected date
     const { data: bookings, error } = await supabase
@@ -139,22 +142,33 @@ export default function BookingApp() {
       return
     }
 
+    console.log('Fetched bookings:', bookings)
+
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {
       const slotStart = parse(slot, 'HH:mm', date)
       const slotEnd = addMinutes(slotStart, 30)
-      return !bookings.some(booking => {
+      const isAvailable = !bookings.some(booking => {
         const bookingStart = parse(booking.time, 'HH:mm', date)
         const bookingEnd = addMinutes(bookingStart, booking.duration || 45)
-        return (
+        const overlap = (
           (isEqual(slotStart, bookingStart) || isEqual(slotEnd, bookingEnd)) ||
           (isAfter(slotStart, bookingStart) && isBefore(slotStart, bookingEnd)) ||
           (isAfter(slotEnd, bookingStart) && isBefore(slotEnd, bookingEnd)) ||
           (isBefore(slotStart, bookingStart) && isAfter(slotEnd, bookingEnd))
         )
+        if (overlap) {
+          console.log(`Slot ${slot} overlaps with booking:`, booking)
+        }
+        return overlap
       })
+      if (!isAvailable) {
+        console.log(`Slot ${slot} is not available`)
+      }
+      return isAvailable
     })
 
+    console.log('Available slots:', availableSlots)
     setAvailableTimes(availableSlots)
   }
 
