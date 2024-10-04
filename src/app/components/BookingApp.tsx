@@ -516,7 +516,7 @@ export default function BookingApp() {
               <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-black border border-gray-800 rounded-lg p-2">
                 <label
                   htmlFor={service.name}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   {service.name} - {service.price}€
                 </label>
