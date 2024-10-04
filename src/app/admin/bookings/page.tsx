@@ -8,6 +8,8 @@ import { supabase } from '@/utils/supabase'
 import { Booking } from '@/app/types/bookings'
 import { Calendar, Clock, Scissors, User, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Trash2 } from 'lucide-react'
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -44,6 +46,19 @@ export default function BookingsPage() {
       setBookings(bookings.map(booking => 
         booking.id === id ? { ...booking, status: newStatus } : booking
       ))
+    }
+  }
+
+  const deleteBooking = async (id: number) => {
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting booking:', error)
+    } else {
+      setBookings(bookings.filter(booking => booking.id !== id))
     }
   }
 
@@ -94,7 +109,7 @@ export default function BookingsPage() {
                   </TableCell>
                   <TableCell className="text-white">
                     <Clock className="inline mr-2 text-orange-500" />
-                    {booking.time}
+                    {booking.time.slice(0, 5)} {/* This removes the seconds */}
                   </TableCell>
                   <TableCell className="text-white">
                     <Scissors className="inline mr-2 text-orange-500" />
@@ -109,19 +124,45 @@ export default function BookingsPage() {
                     {booking.status}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={booking.status}
-                      onValueChange={(value) => updateBookingStatus(booking.id!, value)}
-                    >
-                      <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                        <SelectValue placeholder="Update status" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 text-white border-gray-700">
-                        <SelectItem value="pending" className="hover:bg-gray-700">Pending</SelectItem>
-                        <SelectItem value="done" className="hover:bg-gray-700">Done</SelectItem>
-                        <SelectItem value="cancelled" className="hover:bg-gray-700">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex space-x-2">
+                      <Select
+                        value={booking.status}
+                        onValueChange={(value) => updateBookingStatus(booking.id!, value)}
+                      >
+                        <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
+                          <SelectValue placeholder="Update status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 text-white border-gray-700">
+                          <SelectItem value="pending" className="hover:bg-gray-700">Pending</SelectItem>
+                          <SelectItem value="done" className="hover:bg-gray-700">Done</SelectItem>
+                          <SelectItem value="cancelled" className="hover:bg-gray-700">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-gray-800 text-white border-gray-700">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-400">
+                              This action cannot be undone. This will permanently delete the booking.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              className="bg-red-600 text-white hover:bg-red-700"
+                              onClick={() => deleteBooking(booking.id!)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
