@@ -548,6 +548,9 @@ export default function BookingApp() {
             <span className="text-black font-semibold">Σύνολο:</span>
             <span className="text-black font-semibold">{totalPrice}€</span>
           </div>
+          <p className="text-xs text-black/70 text-center italic">
+            Η πληρωμή γίνεται στο κατάστημα με μετρητά ή κάρτα
+          </p>
           <Button 
             className="w-full bg-black text-white hover:bg-gray-800" 
             onClick={handleBookNow}
