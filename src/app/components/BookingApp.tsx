@@ -41,6 +41,10 @@ export default function BookingApp() {
   const [workingHours, setWorkingHours] = useState<WorkingHours[]>([])
   const [specialHours, setSpecialHours] = useState<SpecialHours[]>([])
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
+  const [errors, setErrors] = useState({
+    email: '',
+    phoneNumber: ''
+  })
 
   const { toast } = useToast()
 
@@ -199,8 +203,37 @@ export default function BookingApp() {
     generateMathChallenge()
   }
 
+  const validateEmail = (email: string) => {
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return re.test(email)
+  }
+
+  const validatePhoneNumber = (phone: string) => {
+    const re = /^69\d{8}$/
+    return re.test(phone)
+  }
+
+  const handleInputChange = (field: 'fullName' | 'phoneNumber' | 'email', value: string) => {
+    setBookingDetails({ ...bookingDetails, [field]: value })
+
+    if (field === 'email') {
+      setErrors(prev => ({
+        ...prev,
+        email: validateEmail(value) ? '' : 'Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email'
+      }))
+    } else if (field === 'phoneNumber') {
+      setErrors(prev => ({
+        ...prev,
+        phoneNumber: validatePhoneNumber(value) ? '' : 'Ο αριθμός τηλεφώνου πρέπει να ξεκινάει με 69 και να έχει 10 ψηφία'
+      }))
+    }
+  }
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateEmail(bookingDetails.email) || !validatePhoneNumber(bookingDetails.phoneNumber)) {
+      return // Don't submit if validation fails
+    }
     if (!selectedDate || !selectedTime || !selectedService) return
 
     const correctAnswer = mathChallenge.num1 + mathChallenge.num2
@@ -544,7 +577,7 @@ export default function BookingApp() {
                   className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
                   placeholder="Ονοματεπώνυμο"
                   value={bookingDetails.fullName}
-                  onChange={(e) => setBookingDetails({...bookingDetails, fullName: e.target.value})}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
                   required
                 />
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -554,12 +587,13 @@ export default function BookingApp() {
                 <Input
                   id="phone"
                   className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                  placeholder="Αριθμός Τηλεφώνου"
+                  placeholder="Αριθμός Τηλεφώνου (ξεκινάει με 69)"
                   value={bookingDetails.phoneNumber}
-                  onChange={(e) => setBookingDetails({...bookingDetails, phoneNumber: e.target.value})}
+                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                   required
                 />
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
               </div>
               <div className="relative">
                 <Label htmlFor="email" className="sr-only">Διεύθυνση Email</Label>
@@ -569,10 +603,11 @@ export default function BookingApp() {
                   className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
                   placeholder="Διεύθυνση Email"
                   value={bookingDetails.email}
-                  onChange={(e) => setBookingDetails({...bookingDetails, email: e.target.value})}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   required
                 />
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
             </div>
             <div className="bg-gray-900 p-4 rounded-xl space-y-2">
