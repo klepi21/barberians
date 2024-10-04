@@ -16,10 +16,12 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
-  { name: 'Κούρεμα', price: 13, duration: 30 },
+  { name: 'Ανδρικό Κούρεμα', price: 13, duration: 30 },
   { name: 'Shaver', price: 15, duration: 30 },
-  { name: 'Γένιαδα', price: 5, duration: 30 },
-  { name: 'Αυχένας', price: 5, duration: 30 },
+  { name: 'Παιδικό Κούρεμα', price: 10, duration: 30 },
+  { name: 'Ξύρισμα', price: 13, duration: 30 },
+  { name: 'Περιποίηση Γένιαδας', price: 5, duration: 30 },
+  { name: 'Καθαρισμός Αυχένα', price: 5, duration: 30 },
 ]   
 
 export default function BookingApp() {
@@ -152,16 +154,13 @@ export default function BookingApp() {
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {
       const slotStart = parse(slot, 'HH:mm', date)
-      const slotEnd = addMinutes(slotStart, 30)
       const isAvailable = !bookings.some(booking => {
         const bookingStart = parse(booking.time, 'HH:mm:ss', date)
         const bookingEnd = addMinutes(bookingStart, booking.duration || 45)
-        const overlap = (
-          (isEqual(slotStart, bookingStart) || isEqual(slotEnd, bookingEnd)) ||
-          (isAfter(slotStart, bookingStart) && isBefore(slotStart, bookingEnd)) ||
-          (isAfter(slotEnd, bookingStart) && isBefore(slotEnd, bookingEnd)) ||
-          (isBefore(slotStart, bookingStart) && isAfter(slotEnd, bookingEnd))
-        )
+        
+        // Check if the slot start time is within the booking duration
+        const overlap = isAfter(slotStart, bookingStart) && isBefore(slotStart, bookingEnd)
+        
         if (overlap) {
           console.log(`Slot ${slot} overlaps with booking:`, booking)
         }
