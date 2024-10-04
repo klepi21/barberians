@@ -158,8 +158,8 @@ export default function BookingApp() {
         const bookingStart = parse(booking.time, 'HH:mm:ss', date)
         const bookingEnd = addMinutes(bookingStart, booking.duration || 45)
         
-        // Check if the slot start time is within the booking duration
-        const overlap = isAfter(slotStart, bookingStart) && isBefore(slotStart, bookingEnd)
+        // Check if the slot start time is exactly at the booking start time
+        const overlap = isEqual(slotStart, bookingStart)
         
         if (overlap) {
           console.log(`Slot ${slot} overlaps with booking:`, booking)
