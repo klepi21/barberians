@@ -16,9 +16,10 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
-  { name: 'Κούρεμα', price: 10, duration: 45 },
-  { name: 'Γένια', price: 5, duration: 20 },
-  { name: 'Πλήρες', price: 20, duration: 45 },
+  { name: 'Κούρεμα', price: 13, duration: 30 },
+  { name: 'Shaver', price: 15, duration: 30 },
+  { name: 'Γένιαδα', price: 5, duration: 15 },
+  { name: 'Αυχένας', price: 5, duration: 15 },
 ]   
 
 export default function BookingApp() {
