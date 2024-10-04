@@ -18,8 +18,8 @@ import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isS
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα', price: 13, duration: 30 },
   { name: 'Shaver', price: 15, duration: 30 },
-  { name: 'Γένιαδα', price: 5, duration: 15 },
-  { name: 'Αυχένας', price: 5, duration: 15 },
+  { name: 'Γένιαδα', price: 5, duration: 30 },
+  { name: 'Αυχένας', price: 5, duration: 30 },
 ]   
 
 export default function BookingApp() {
