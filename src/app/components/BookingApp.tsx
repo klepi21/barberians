@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Heart, MoreHorizontal, Star, User, Phone, Mail, Check, MapPin, Calendar, Clock, Scissors } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Heart, MoreHorizontal, Star, User, Phone, Mail, Check, MapPin, Calendar, Clock, Scissors, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -47,6 +48,8 @@ export default function BookingApp() {
     email: '',
     phoneNumber: ''
   })
+  const [searchPhoneNumber, setSearchPhoneNumber] = useState('')
+  const [userBookings, setUserBookings] = useState<Booking[]>([])
 
   const { toast } = useToast()
 
@@ -358,6 +361,45 @@ export default function BookingApp() {
     }
   }
 
+  const handleSearchBookings = async () => {
+    if (!validatePhoneNumber(searchPhoneNumber)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Παρακαλώ εισάγετε έναν έγκυρο αριθμό τηλεφώνου.",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('phonenumber', searchPhoneNumber)
+        .order('date', { ascending: true })
+
+      if (error) throw error
+
+      setUserBookings(data)
+      if (data.length === 0) {
+        toast({
+          title: "No bookings found",
+          description: "Δεν βρέθηκαν κρατήσεις για αυτόν τον αριθμό τηλεφώνου.",
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Αποτυχία ανάκτησης κρατήσεων. Παρακαλώ δοκιμάστε ξανά.",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="max-w-md mx-auto bg-black text-white rounded-3xl shadow-lg overflow-hidden">
       <div className="relative h-64">
@@ -405,160 +447,220 @@ export default function BookingApp() {
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="mb-6 glass-effect rounded-xl p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">{greekMonths[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
-            <div className="flex space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => changeMonth(-1)}
-                disabled={currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => changeMonth(1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {greekDays.map(day => (
-              <div key={day} className="text-center text-sm font-bold text-gray-400">{day}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: firstDayOfMonth }).map((_, index) => (
-              <div key={`empty-${index}`} className="h-10" />
-            ))}
-            {Array.from({ length: daysInMonth }).map((_, index) => {
-              const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1)
-              const isSelected = selectedDate?.toDateString() === date.toDateString()
-              const isDisabled = isDateDisabled(date)
-              return (
-                <Button
-                  key={index}
-                  variant={isSelected ? "secondary" : "ghost"}
-                  className={`h-10 font-bold ${
-                    isSelected
-                      ? 'bg-white text-black hover:bg-gray-200'
-                      : isDisabled
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-gray-800'
-                  }`}
-                  onClick={() => !isDisabled && handleDateSelect(date)}
-                  disabled={isDisabled}
-                >
-                  {index + 1}
-                </Button>
-              )
-            })}
-          </div>
-        </div>
-
-        {selectedDate && (
-          <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '340px' }}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold text-gray-400">ΩΡΑ</h3>
-              <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => scroll(-100)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => scroll(100)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div 
-              ref={timeRef}
-              className="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide"
-              style={{
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              {availableTimes.map((time) => (
-                <Button
-                  key={time}
-                  variant={selectedTime === time ? "secondary" : "ghost"}
-                  className={`flex-shrink-0 w-16 h-10 font-bold ${
-                    selectedTime === time
-                      ? 'bg-white text-black hover:bg-gray-200'
-                      : 'hover:bg-gray-800'
-                  }`}
-                  onClick={() => setSelectedTime(time)}
-                >
-                  {time}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="mb-6">
-          <h3 className="text-sm text-gray-400 mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
-          <div className="flex flex-wrap gap-2">
-            {services.map((service) => (
-              <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-black border border-gray-800 rounded-lg p-2">
-                <label
-                  htmlFor={service.name}
-                  className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {service.name} - {service.price}€
-                </label>
-                <div className="relative">
-                  <Switch
-                    id={service.name}
-                    checked={selectedService === service.name}
-                    onCheckedChange={() => toggleService(service.name)}
-                    className="bg-black data-[state=checked]:bg-orange-400"
-                  />
-                  <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white pointer-events-none" />
+      <Tabs defaultValue="booking" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-900 p-1 rounded-xl mb-4">
+          <TabsTrigger 
+            value="booking" 
+            className="rounded-lg py-2 px-4 data-[state=active]:bg-orange-400 data-[state=active]:text-black transition-all duration-200"
+          >
+            Κράτηση
+          </TabsTrigger>
+          <TabsTrigger 
+            value="my-bookings" 
+            className="rounded-lg py-2 px-4 data-[state=active]:bg-orange-400 data-[state=active]:text-black transition-all duration-200"
+          >
+            Οι Κρατήσεις μου
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="booking" className="mt-0">
+          <div className="p-4">
+            <div className="mb-6 glass-effect rounded-xl p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">{greekMonths[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => changeMonth(-1)}
+                    disabled={currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear()}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => changeMonth(1)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {greekDays.map(day => (
+                  <div key={day} className="text-center text-sm font-bold text-gray-400">{day}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+                  <div key={`empty-${index}`} className="h-10" />
+                ))}
+                {Array.from({ length: daysInMonth }).map((_, index) => {
+                  const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1)
+                  const isSelected = selectedDate?.toDateString() === date.toDateString()
+                  const isDisabled = isDateDisabled(date)
+                  return (
+                    <Button
+                      key={index}
+                      variant={isSelected ? "secondary" : "ghost"}
+                      className={`h-10 font-bold ${
+                        isSelected
+                          ? 'bg-white text-black hover:bg-gray-200'
+                          : isDisabled
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'hover:bg-gray-800'
+                      }`}
+                      onClick={() => !isDisabled && handleDateSelect(date)}
+                      disabled={isDisabled}
+                    >
+                      {index + 1}
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
 
-        <div className="bg-orange-400 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-black">
-              {selectedDate ? selectedDate.toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Επιλέξτε ημερομηνία'}
-            </span>
-            <span className="text-black font-semibold">
-              {selectedTime && `${selectedTime} - ${calculateEndTime(selectedTime)}`}
-            </span>
+            {selectedDate && (
+              <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '340px' }}>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-bold text-gray-400">ΩΡΑ</h3>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => scroll(-100)}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => scroll(100)}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div 
+                  ref={timeRef}
+                  className="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide"
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  {availableTimes.map((time) => (
+                    <Button
+                      key={time}
+                      variant={selectedTime === time ? "secondary" : "ghost"}
+                      className={`flex-shrink-0 w-16 h-10 font-bold ${
+                        selectedTime === time
+                          ? 'bg-white text-black hover:bg-gray-200'
+                          : 'hover:bg-gray-800'
+                      }`}
+                      onClick={() => setSelectedTime(time)}
+                    >
+                      {time}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <h3 className="text-sm text-gray-400 mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
+              <div className="flex flex-wrap gap-2">
+                {services.map((service) => (
+                  <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-black border border-gray-800 rounded-lg p-2">
+                    <label
+                      htmlFor={service.name}
+                      className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {service.name} - {service.price}€
+                    </label>
+                    <div className="relative">
+                      <Switch
+                        id={service.name}
+                        checked={selectedService === service.name}
+                        onCheckedChange={() => toggleService(service.name)}
+                        className="bg-black data-[state=checked]:bg-orange-400"
+                      />
+                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white pointer-events-none" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-orange-400 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-black">
+                  {selectedDate ? selectedDate.toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Επιλέξτε ημερομηνία'}
+                </span>
+                <span className="text-black font-semibold">
+                  {selectedTime && `${selectedTime} - ${calculateEndTime(selectedTime)}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-black font-semibold">Σύνολο:</span>
+                <span className="text-black font-semibold">{totalPrice}€</span>
+              </div>
+              <p className="text-xs text-black/70 text-center italic">
+                Η πληρωμή γίνεται στο κατάστημα με μετρητά ή κάρτα
+              </p>
+              <Button 
+                className="w-full bg-black text-white hover:bg-gray-800" 
+                onClick={handleBookNow}
+                disabled={!selectedDate || !selectedTime || !selectedService || isLoading}
+              >
+                {isLoading ? 'Παρακαλώ περιμένετε...' : 'Κράτηση Τώρα'}
+              </Button>
+            </div>
           </div>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-black font-semibold">Σύνολο:</span>
-            <span className="text-black font-semibold">{totalPrice}€</span>
+        </TabsContent>
+        <TabsContent value="my-bookings" className="mt-0">
+          <div className="p-4">
+            <h2 className="text-xl font-bold mb-4">Οι Κρατήσεις μου</h2>
+            <div className="mb-4">
+              <Label htmlFor="searchPhoneNumber" className="sr-only">Αριθμός Τηλεφώνου</Label>
+              <div className="flex space-x-2">
+                <Input
+                  id="searchPhoneNumber"
+                  placeholder="Αριθμός Τηλεφώνου"
+                  value={searchPhoneNumber}
+                  onChange={(e) => setSearchPhoneNumber(e.target.value)}
+                  className="bg-gray-900 border-gray-700"
+                />
+                <Button onClick={handleSearchBookings} disabled={isLoading}>
+                  <Search className="h-4 w-4 mr-2" />
+                  Αναζήτηση
+                </Button>
+              </div>
+            </div>
+            {userBookings.length > 0 ? (
+              <div className="space-y-4">
+                {userBookings.map((booking) => (
+                  <div key={booking.id} className="bg-gray-800 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold">{booking.service}</span>
+                      <span className="text-orange-400">{booking.status}</span>
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      <p>{new Date(booking.date).toLocaleDateString('el-GR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      <p>{booking.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[400px] text-gray-400">
+                <Calendar className="w-16 h-16 mb-4 text-gray-600" />
+                <p className="text-center">Δεν βρέθηκαν κρατήσεις. Εισάγετε τον αριθμό τηλεφώνου σας για να δείτε τις κρατήσεις σας.</p>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-black/70 text-center italic">
-            Η πληρωμή γίνεται στο κατάστημα με μετρητά ή κάρτα
-          </p>
-          <Button 
-            className="w-full bg-black text-white hover:bg-gray-800" 
-            onClick={handleBookNow}
-            disabled={!selectedDate || !selectedTime || !selectedService || isLoading}
-          >
-            {isLoading ? 'Παρακαλώ περιμένετε...' : 'Κράτηση Τώρα'}
-          </Button>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
         <DialogContent className="bg-black text-white border border-gray-800 rounded-3xl p-0 overflow-hidden max-w-md">
