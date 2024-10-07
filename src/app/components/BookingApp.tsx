@@ -17,11 +17,11 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
 
 const HARDCODED_SERVICES: Service[] = [
-  { name: 'Ανδρικό Κούρεμα', price: 13, duration: 30 },
+  { name: 'Ανδρικό', price: 13, duration: 30 },
   { name: 'Shaver', price: 15, duration: 30 },
-  { name: 'Παιδικό Κούρεμα', price: 10, duration: 30 },
+  { name: 'Παιδικό', price: 10, duration: 30 },
   { name: 'Ξύρισμα', price: 13, duration: 30 },
-  { name: 'Περιποίηση Γένιαδας', price: 5, duration: 30 },
+  { name: 'Γενιάδα', price: 5, duration: 30 },
   { name: 'Καθαρισμός Αυχένα', price: 5, duration: 30 },
 ]   
 
