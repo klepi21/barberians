@@ -23,7 +23,7 @@ const HARDCODED_SERVICES: Service[] = [
   { name: 'Shaver', price: 15, duration: 30 },
   { name: 'Παιδικό', price: 10, duration: 30 },
   { name: 'Ξύρισμα', price: 13, duration: 30 },
-  { name: 'Γενιάδα', price: 5, duration: 30 },
+  { name: 'Γενειάδα', price: 5, duration: 30 },
   { name: 'Καθαρισμός Αυχένα', price: 5, duration: 30 },
 ]   
 
