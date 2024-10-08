@@ -16,6 +16,7 @@ import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookin
 import { PostgrestError } from '@supabase/supabase-js'
 import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
 import Image from 'next/image'
+import oldsIcon from '@/images/olds.png'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Ανδρικό', price: 13, duration: 30 },
@@ -616,7 +617,7 @@ export default function BookingApp() {
                       {service.name}
                       {service.name === 'Ξύρισμα' && (
                         <Image
-                          src="/images/olds.png"
+                          src={oldsIcon}
                           alt="Olds icon"
                           width={16}
                           height={16}
