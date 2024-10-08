@@ -619,12 +619,12 @@ export default function BookingApp() {
                         <Image
                           src={oldsIcon}
                           alt="Olds icon"
-                          width={16}
-                          height={16}
+                          width={32}
+                          height={32}
                           className="ml-1"
                         />
                       )}
-                      {' - '}{service.price}€
+                      
                     </label>
                     <div className="relative">
                       <Switch
