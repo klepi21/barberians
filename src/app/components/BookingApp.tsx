@@ -28,7 +28,7 @@ const HARDCODED_SERVICES: Service[] = [
 export default function BookingApp() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
-  const [selectedService, setSelectedService] = useState<string | null>(null)
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -180,19 +180,55 @@ export default function BookingApp() {
   }
 
   const toggleService = (serviceName: string) => {
-    setSelectedService(prev => prev === serviceName ? null : serviceName)
+    setSelectedServices(prev => {
+      const newServices = prev.includes(serviceName)
+        ? prev.filter(s => s !== serviceName)
+        : [...prev, serviceName]
+
+      // Handle special combinations
+      if (newServices.includes('Ανδρικό') && newServices.includes('Γενιάδα')) {
+        return ['Ανδρικό', 'Γενιάδα']
+      }
+      if (newServices.includes('Shaver') && newServices.includes('Γενιάδα')) {
+        return ['Shaver', 'Γενιάδα']
+      }
+      if ((newServices.includes('Shaver') || newServices.includes('Ανδρικό')) && newServices.includes('Ξύρισμα')) {
+        return newServices.filter(s => s === 'Shaver' || s === 'Ανδρικό' || s === 'Ξύρισμα').slice(0, 2)
+      }
+
+      // Limit to maximum of 2 services
+      return newServices.slice(0, 2)
+    })
+  }
+
+  const calculateTotalPrice = () => {
+    if (selectedServices.length === 0) return 0
+
+    if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενιάδα')) {
+      return 15
+    }
+    if (selectedServices.includes('Shaver') && selectedServices.includes('Γενιάδα')) {
+      return 16
+    }
+    if (selectedServices.includes('Shaver') && selectedServices.includes('Ξύρισμα')) {
+      return 28
+    }
+    if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Ξύρισμα')) {
+      return 26
+    }
+
+    return selectedServices.reduce((total, serviceName) => {
+      const service = services.find(s => s.name === serviceName)
+      return total + (service ? service.price : 0)
+    }, 0)
   }
 
   const calculateEndTime = (startTime: string) => {
     const [hours, minutes] = startTime.split(':').map(Number)
-    const duration = selectedService ? services.find(s => s.name === selectedService)?.duration || 45 : 45
+    const duration = 30 // All combinations result in 30 minutes total
     const endDate = new Date(2022, 0, 1, hours, minutes + duration)
     return endDate.toTimeString().slice(0, 5)
   }
-
-  const totalPrice = selectedService 
-    ? services.find(s => s.name === selectedService)?.price || 0 
-    : 0
 
   const generateMathChallenge = () => {
     const num1 = Math.floor(Math.random() * 10)
@@ -236,7 +272,7 @@ export default function BookingApp() {
     if (!validateEmail(bookingDetails.email) || !validatePhoneNumber(bookingDetails.phoneNumber)) {
       return // Don't submit if validation fails
     }
-    if (!selectedDate || !selectedTime || !selectedService) return
+    if (!selectedDate || !selectedTime || selectedServices.length === 0) return
 
     const correctAnswer = mathChallenge.num1 + mathChallenge.num2
     if (parseInt(mathChallenge.answer) !== correctAnswer) {
@@ -278,7 +314,7 @@ export default function BookingApp() {
         const { data: newUser, error: insertError } = await supabase
           .from('users')
           .insert({
-            full_name: bookingDetails.fullName,
+            full_name:  bookingDetails.fullName,
             email: bookingDetails.email,
             telephone: bookingDetails.phoneNumber,
             booking_count: 1
@@ -298,13 +334,13 @@ export default function BookingApp() {
           {
             date: format(selectedDate, 'yyyy-MM-dd'),
             time: selectedTime,
-            service: selectedService,
+            service: selectedServices.join(', '),
             fullname: bookingDetails.fullName,
             phonenumber: bookingDetails.phoneNumber,
             email: bookingDetails.email,
             status: 'pending',
             user_id: userId,
-            duration: services.find(s => s.name === selectedService)?.duration || 45
+            duration: 30 // All combinations result in 30 minutes total
           }
         ])
 
@@ -581,7 +617,7 @@ export default function BookingApp() {
                     <div className="relative">
                       <Switch
                         id={service.name}
-                        checked={selectedService === service.name}
+                        checked={selectedServices.includes(service.name)}
                         onCheckedChange={() => toggleService(service.name)}
                         className="bg-black data-[state=checked]:bg-orange-400"
                       />
@@ -603,7 +639,7 @@ export default function BookingApp() {
               </div>
               <div className="flex justify-between items-center mb-4">
                 <span className="text-black font-semibold">Σύνολο:</span>
-                <span className="text-black font-semibold">{totalPrice}€</span>
+                <span className="text-black font-semibold">{calculateTotalPrice()}€</span>
               </div>
               <p className="text-xs text-black/70 text-center italic">
                 Η πληρωμή γίνεται στο κατάστημα με μετρητά ή κάρτα
@@ -611,9 +647,9 @@ export default function BookingApp() {
               <Button 
                 className="w-full bg-black text-white hover:bg-gray-800" 
                 onClick={handleBookNow}
-                disabled={!selectedDate || !selectedTime || !selectedService || isLoading}
+                disabled={!selectedDate || !selectedTime || selectedServices.length === 0 || isLoading}
               >
-                {isLoading ? 'Παρακαλώ περιμένετε...' : 'Κράτηση Τώρα'}
+                {isLoading ? 'Παρακαλώ περιμένετε...'  : 'Κράτηση Τώρα'}
               </Button>
             </div>
           </div>
@@ -726,11 +762,11 @@ export default function BookingApp() {
               </div>
               <div className="flex items-center">
                 <Scissors className="mr-2 h-4 w-4 text-gray-400" />
-                <span>{selectedService}</span>
+                <span>{selectedServices.join(', ')}</span>
               </div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
                 <span className="font-semibold">Σύνολο:</span>
-                <span className="font-semibold text-orange-400">{totalPrice}€</span>
+                <span className="font-semibold text-orange-400">{calculateTotalPrice()}€</span>
               </div>
             </div>
             <div className="space-y-2">
