@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { supabase } from '@/utils/supabase'
-import { Calendar, Clock, PlusCircle, Settings, User } from 'lucide-react'
+import { Calendar, Clock, PlusCircle, Settings, User, Bell } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import { toast } from "@/components/ui/use-toast"
 
 type Booking = {
   id: number
@@ -20,9 +21,21 @@ export default function AdminDashboard() {
   const [totalBookings, setTotalBookings] = useState(0)
   const [todayBookings, setTodayBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [newBookings, setNewBookings] = useState<Booking[]>([])
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
     fetchDashboardData()
+    const subscription = supabase
+      .channel('bookings')
+      .on('broadcast', { event: 'INSERT' }, (payload: { type: 'broadcast', event: string, payload: { new: Booking } }) => {
+        handleNewBooking(payload.payload);
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(subscription)
+    }
   }, [])
 
   const fetchDashboardData = async () => {
@@ -46,6 +59,26 @@ export default function AdminDashboard() {
       setTodayBookings(todayData as Booking[] || [])
     }
     setIsLoading(false)
+  }
+
+  const handleNewBooking = (payload: { new: Booking }) => {
+    const newBooking = payload.new
+    setNewBookings(prev => [...prev, newBooking])
+    setTotalBookings(prev => prev + 1)
+    if (newBooking.date === new Date().toISOString().split('T')[0]) {
+      setTodayBookings(prev => [...prev, newBooking].sort((a, b) => a.time.localeCompare(b.time)))
+    }
+    playNotificationSound()
+    toast({
+      title: "New Booking",
+      description: `${newBooking.fullname} booked for ${newBooking.service} at ${newBooking.time}`,
+    })
+  }
+
+  const playNotificationSound = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(error => console.error('Error playing sound:', error))
+    }
   }
 
   const renderCalendar = () => {
@@ -147,12 +180,29 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {newBookings.length > 0 && (
+        <Card className="bg-orange-500 border-none shadow-lg mt-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Bell className="text-white w-8 h-8" />
+              <span className="text-sm font-medium text-white">New Bookings</span>
+            </div>
+            <div className="text-2xl font-bold text-white mb-4">{newBookings.length} new booking(s)</div>
+            <Button onClick={() => setNewBookings([])} variant="outline" className="w-full bg-white hover:bg-gray-100 text-orange-500 border-none">
+              Clear Notifications
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {todayBookings.length > 0 ? renderCalendar() : (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 mt-8">
           <h2 className="text-2xl font-bold text-white mb-4">Today's Schedule</h2>
           <p className="text-gray-400">No bookings for today.</p>
         </div>
       )}
+
+      <audio ref={audioRef} src="/src/notification-sound.wav" />
     </div>
   )
 }
