@@ -15,6 +15,7 @@ import { supabase } from '@/utils/supabase'
 import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
 import { PostgrestError } from '@supabase/supabase-js'
 import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
+import Image from 'next/image'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Ανδρικό', price: 13, duration: 30 },
@@ -610,9 +611,19 @@ export default function BookingApp() {
                   <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-black border border-gray-800 rounded-lg p-2">
                     <label
                       htmlFor={service.name}
-                      className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
                     >
-                      {service.name} - {service.price}€
+                      {service.name}
+                      {service.name === 'Ξύρισμα' && (
+                        <Image
+                          src="/images/olds.png"
+                          alt="Olds icon"
+                          width={16}
+                          height={16}
+                          className="ml-1"
+                        />
+                      )}
+                      {' - '}{service.price}€
                     </label>
                     <div className="relative">
                       <Switch
