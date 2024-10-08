@@ -457,7 +457,7 @@ export default function BookingApp() {
               <h1 className="text-2xl font-bold">BARBERIANS CUTS ON THE ROCKS</h1>
               <div className="flex items-center">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="ml-1">4.8 (114)</span>
+                {/* <span className="ml-1">4.8 (114)</span> */}
                 <span className="ml-2 text-orange-400">Μπαρμπέρης</span>
               </div>
             </div>
