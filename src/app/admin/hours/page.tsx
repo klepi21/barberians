@@ -186,7 +186,7 @@ export default function WorkingHoursPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-white flex items-center">
             <Clock className="mr-2 text-orange-500" />
-            General Working Hours
+            Γενικές Ώρες Εργασίας
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -196,7 +196,7 @@ export default function WorkingHoursPage() {
                 checked={generalHours[day]?.isOpen}
                 onCheckedChange={(checked) => handleGeneralHoursChange(day, 'isOpen', checked)}
               />
-              <span className="w-24 text-white">{day}</span>
+              <span className="w-24 text-white">{translateDay(day)}</span>
               {generalHours[day]?.isOpen ? (
                 <>
                   <Select
@@ -204,7 +204,7 @@ export default function WorkingHoursPage() {
                     onValueChange={(value) => handleGeneralHoursChange(day, 'start', value)}
                   >
                     <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                      <SelectValue placeholder="Start time" />
+                      <SelectValue placeholder="Ώρα έναρξης" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 text-white border-gray-700">
                       {timeSlots.map(time => (
@@ -212,13 +212,13 @@ export default function WorkingHoursPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <span className="text-white">to</span>
+                  <span className="text-white">έως</span>
                   <Select
                     value={generalHours[day]?.end}
                     onValueChange={(value) => handleGeneralHoursChange(day, 'end', value)}
                   >
                     <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                      <SelectValue placeholder="End time" />
+                      <SelectValue placeholder="Ώρα λήξης" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 text-white border-gray-700">
                       {timeSlots.map(time => (
@@ -228,7 +228,7 @@ export default function WorkingHoursPage() {
                   </Select>
                 </>
               ) : (
-                <span className="text-red-400 font-bold">CLOSED</span>
+                <span className="text-red-400 font-bold">ΚΛΕΙΣΤΟ</span>
               )}
             </div>
           ))}
@@ -237,20 +237,20 @@ export default function WorkingHoursPage() {
             onClick={saveGeneralHours}
             disabled={isLoading}
           >
-            {isLoading ? 'Saving...' : 'Save General Hours'}
+            {isLoading ? 'Αποθήκευση...' : 'Αποθήκευση Γενικών Ωρών'}
           </Button>
 
           <div className="mt-8 border-t border-gray-700 pt-4">
-            <h3 className="text-xl font-semibold mb-4">Current Working Hours</h3>
+            <h3 className="text-xl font-semibold mb-4">Τρέχουσες Ώρες Εργασίας</h3>
             {daysOfWeek.map(day => (
               <div key={`saved-${day}`} className="flex items-center space-x-4 mb-2">
-                <span className="w-24 text-white">{day}:</span>
+                <span className="w-24 text-white">{translateDay(day)}:</span>
                 {generalHours[day]?.isOpen ? (
                   <span className="text-green-400">
-                    Open {generalHours[day].start} - {generalHours[day].end}
+                    Ανοιχτά {generalHours[day].start} - {generalHours[day].end}
                   </span>
                 ) : (
-                  <span className="text-red-400">Closed</span>
+                  <span className="text-red-400">Κλειστά</span>
                 )}
               </div>
             ))}
@@ -262,13 +262,13 @@ export default function WorkingHoursPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-white flex items-center">
             <Calendar className="mr-2 text-orange-500" />
-            Special Date Hours
+            Ειδικές Ώρες Ημερομηνίας
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSpecificHoursSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="specificDate" className="text-white">Date</Label>
+              <Label htmlFor="specificDate" className="text-white">Ημερομηνία</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -276,7 +276,7 @@ export default function WorkingHoursPage() {
                     className={`w-full justify-start text-left font-normal bg-gray-700 text-white border-gray-600 ${!specificDate && "text-muted-foreground"}`}
                   >
                     <Calendar className="mr-2 h-4 w-4" />
-                    {specificDate ? format(specificDate, "PPP") : <span>Pick a date</span>}
+                    {specificDate ? format(specificDate, "PPP") : <span>Επιλέξτε ημερομηνία</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700">
@@ -294,7 +294,7 @@ export default function WorkingHoursPage() {
                 checked={specificHours.isOpen}
                 onCheckedChange={(checked) => setSpecificHours(prev => ({ ...prev, isOpen: checked }))}
               />
-              <span className="text-white">Open</span>
+              <span className="text-white">Ανοιχτά</span>
               {specificHours.isOpen ? (
                 <>
                   <Select
@@ -302,7 +302,7 @@ export default function WorkingHoursPage() {
                     onValueChange={(value) => setSpecificHours(prev => ({ ...prev, start: value }))}
                   >
                     <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                      <SelectValue placeholder="Start time" />
+                      <SelectValue placeholder="Ώρα έναρξης" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 text-white border-gray-700">
                       {timeSlots.map(time => (
@@ -310,13 +310,13 @@ export default function WorkingHoursPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <span className="text-white">to</span>
+                  <span className="text-white">έως</span>
                   <Select
                     value={specificHours.end}
                     onValueChange={(value) => setSpecificHours(prev => ({ ...prev, end: value }))}
                   >
                     <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                      <SelectValue placeholder="End time" />
+                      <SelectValue placeholder="Ώρα λήξης" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 text-white border-gray-700">
                       {timeSlots.map(time => (
@@ -326,28 +326,27 @@ export default function WorkingHoursPage() {
                   </Select>
                 </>
               ) : (
-                <span className="text-red-400 font-bold">CLOSED</span>
+                <span className="text-red-400 font-bold">ΚΛΕΙΣΤΟ</span>
               )}
             </div>
             <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white">
-              <Save className="mr-2 h-4 w-4" /> Set Special Hours
+              <Save className="mr-2 h-4 w-4" /> Ορισμός Ειδικών Ωρών
             </Button>
           </form>
 
-          {/* Display saved specific dates */}
           <div className="mt-8 border-t border-gray-700 pt-4">
-            <h3 className="text-xl font-semibold mb-4">Saved Special Dates</h3>
+            <h3 className="text-xl font-semibold mb-4">Αποθηκευμένες Ειδικές Ημερομηνίες</h3>
             {savedSpecificDates.length === 0 ? (
-              <p className="text-gray-400">No special dates set yet.</p>
+              <p className="text-gray-400">Δεν έχουν οριστεί ακόμη ειδικές ημερομηνίες.</p>
             ) : (
               savedSpecificDates.map((date) => (
                 <div key={date.id} className="flex items-center space-x-4 mb-2">
                   <span className="w-32 text-white">{format(new Date(date.date), 'PPP')}:</span>
                   {date.start_time === '00:00' && date.end_time === '00:00' ? (
-                    <span className="text-red-400 font-bold">CLOSED</span>
+                    <span className="text-red-400 font-bold">ΚΛΕΙΣΤΟ</span>
                   ) : (
                     <span className="text-green-400">
-                      Open {date.start_time.slice(0, 5)} - {date.end_time.slice(0, 5)}
+                      Ανοιχτά {date.start_time.slice(0, 5)} - {date.end_time.slice(0, 5)}
                     </span>
                   )}
                 </div>
@@ -358,4 +357,17 @@ export default function WorkingHoursPage() {
       </Card>
     </div>
   )
+}
+
+function translateDay(day: string): string {
+  const translations: Record<string, string> = {
+    'Monday': 'Δευτέρα',
+    'Tuesday': 'Τρίτη',
+    'Wednesday': 'Τετάρτη',
+    'Thursday': 'Πέμπτη',
+    'Friday': 'Παρασκευή',
+    'Saturday': 'Σάββατο',
+    'Sunday': 'Κυριακή'
+  }
+  return translations[day] || day
 }

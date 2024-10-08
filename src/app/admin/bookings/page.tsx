@@ -27,7 +27,7 @@ export default function BookingsPage() {
       .order('date', { ascending: true })
 
     if (error) {
-      console.error('Error fetching bookings:', error)
+      console.error('Σφάλμα κατά τη λήψη των κρατήσεων:', error)
     } else {
       setBookings(data || [])
     }
@@ -41,7 +41,7 @@ export default function BookingsPage() {
       .eq('id', id)
 
     if (error) {
-      console.error('Error updating booking status:', error)
+      console.error('Σφάλμα κατά την ενημέρωση της κατάστασης κράτησης:', error)
     } else {
       setBookings(bookings.map(booking => 
         booking.id === id ? { ...booking, status: newStatus } : booking
@@ -56,7 +56,7 @@ export default function BookingsPage() {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting booking:', error)
+      console.error('Σφάλμα κατά τη διαγραφή της κράτησης:', error)
     } else {
       setBookings(bookings.filter(booking => booking.id !== id))
     }
@@ -74,7 +74,7 @@ export default function BookingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-orange-500 text-2xl">Loading bookings...</div>
+        <div className="text-orange-500 text-2xl">Φόρτωση κρατήσεων...</div>
       </div>
     )
   }
@@ -84,7 +84,7 @@ export default function BookingsPage() {
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-white flex items-center">
           <Calendar className="mr-2 text-orange-500" />
-          Manage Bookings
+          Διαχείριση Κρατήσεων
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -92,12 +92,12 @@ export default function BookingsPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-800 border-b border-gray-700">
-                <TableHead className="text-orange-500">Date</TableHead>
-                <TableHead className="text-orange-500">Time</TableHead>
-                <TableHead className="text-orange-500">Service</TableHead>
-                <TableHead className="text-orange-500">Customer</TableHead>
-                <TableHead className="text-orange-500">Status</TableHead>
-                <TableHead className="text-orange-500">Actions</TableHead>
+                <TableHead className="text-orange-500">Ημερομηνία</TableHead>
+                <TableHead className="text-orange-500">Ώρα</TableHead>
+                <TableHead className="text-orange-500">Υπηρεσία</TableHead>
+                <TableHead className="text-orange-500">Πελάτης</TableHead>
+                <TableHead className="text-orange-500">Κατάσταση</TableHead>
+                <TableHead className="text-orange-500">Ενέργειες</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,7 +109,7 @@ export default function BookingsPage() {
                   </TableCell>
                   <TableCell className="text-white">
                     <Clock className="inline mr-2 text-orange-500" />
-                    {booking.time.slice(0, 5)} {/* This removes the seconds */}
+                    {booking.time.slice(0, 5)} {/* Αφαιρεί τα δευτερόλεπτα */}
                   </TableCell>
                   <TableCell className="text-white">
                     <Scissors className="inline mr-2 text-orange-500" />
@@ -121,7 +121,9 @@ export default function BookingsPage() {
                   </TableCell>
                   <TableCell className={`font-semibold ${getStatusColor(booking.status)}`}>
                     <AlertCircle className="inline mr-2" />
-                    {booking.status}
+                    {booking.status === 'pending' ? 'Εκκρεμεί' :
+                     booking.status === 'done' ? 'Ολοκληρώθηκε' :
+                     booking.status === 'cancelled' ? 'Ακυρώθηκε' : booking.status}
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
@@ -130,12 +132,12 @@ export default function BookingsPage() {
                         onValueChange={(value) => updateBookingStatus(booking.id!, value)}
                       >
                         <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                          <SelectValue placeholder="Update status" />
+                          <SelectValue placeholder="Ενημέρωση κατάστασης" />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 text-white border-gray-700">
-                          <SelectItem value="pending" className="hover:bg-gray-700">Pending</SelectItem>
-                          <SelectItem value="done" className="hover:bg-gray-700">Done</SelectItem>
-                          <SelectItem value="cancelled" className="hover:bg-gray-700">Cancelled</SelectItem>
+                          <SelectItem value="pending" className="hover:bg-gray-700">Εκκρεμεί</SelectItem>
+                          <SelectItem value="done" className="hover:bg-gray-700">Ολοκληρώθηκε</SelectItem>
+                          <SelectItem value="cancelled" className="hover:bg-gray-700">Ακυρώθηκε</SelectItem>
                         </SelectContent>
                       </Select>
                       <AlertDialog>
@@ -146,18 +148,18 @@ export default function BookingsPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-gray-800 text-white border-gray-700">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogTitle>Είστε σίγουροι;</AlertDialogTitle>
                             <AlertDialogDescription className="text-gray-400">
-                              This action cannot be undone. This will permanently delete the booking.
+                              Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Θα διαγράψει μόνιμα την κράτηση.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Ακύρωση</AlertDialogCancel>
                             <AlertDialogAction 
                               className="bg-red-600 text-white hover:bg-red-700"
                               onClick={() => deleteBooking(booking.id!)}
                             >
-                              Delete
+                              Διαγραφή
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

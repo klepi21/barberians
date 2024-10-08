@@ -11,17 +11,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   const menuItems = [
-    { href: "/admin", label: "Dashboard" },
-    { href: "/admin/bookings", label: "Bookings" },
-    { href: "/admin/hours", label: "Working Hours" },
-    { href: "/admin/new-booking", label: "New Booking" },
+    { href: "/admin", label: "Πίνακας Ελέγχου" },
+    { href: "/admin/bookings", label: "Κρατήσεις" },
+    { href: "/admin/hours", label: "Ώρες Εργασίας" },
+    { href: "/admin/new-booking", label: "Νέα Κράτηση" },
   ]
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-black p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-orange-500">BARBERIANS Admin</h1>
+          <h1 className="text-2xl font-bold text-orange-500">BARBERIANS Διαχείριση</h1>
           <div className="hidden md:flex space-x-4">
             {menuItems.map((item) => (
               <Button key={item.href} asChild variant="ghost" className="text-white hover:text-orange-500 hover:bg-gray-800 font-bold">

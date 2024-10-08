@@ -57,7 +57,7 @@ export default function AdminDashboard() {
       .order('time')
 
     if (error) {
-      console.error('Error fetching bookings:', error)
+      console.error('Σφάλμα κατά τη λήψη των κρατήσεων:', error)
     } else {
       setTotalBookings(total || 0)
       setTodayBookings(todayData as Booking[] || [])
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   }
 
   const handleNewBooking = (newBooking: Booking) => {
-    console.log('New booking received:', newBooking) // Add this line for debugging
+    console.log('Λήφθηκε νέα κράτηση:', newBooking) // Προσθήκη αυτής της γραμμής για αποσφαλμάτωση
     setNewBookings(prev => [...prev, newBooking])
     setTotalBookings(prev => prev + 1)
     if (newBooking.date === new Date().toISOString().split('T')[0]) {
@@ -74,14 +74,14 @@ export default function AdminDashboard() {
     }
     playNotificationSound()
     toast({
-      title: "New Booking",
-      description: `${newBooking.fullname} booked for ${newBooking.service} at ${newBooking.time}`,
+      title: "Νέα Κράτηση",
+      description: `Ο/Η ${newBooking.fullname} έκανε κράτηση για ${newBooking.service} στις ${newBooking.time}`,
     })
   }
 
   const playNotificationSound = () => {
     if (audioRef.current) {
-      audioRef.current.play().catch(error => console.error('Error playing audio:', error));
+      audioRef.current.play().catch(error => console.error('Σφάλμα κατά την αναπαραγωγή ήχου:', error));
     }
   }
 
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
 
     return (
       <div className="bg-gray-800 rounded-lg shadow-lg p-4 mt-8">
-        <h2 className="text-2xl font-bold text-white mb-4">Today's Schedule</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(bookingsByHour).map(([hour, bookings]) => (
             <Card key={hour} className="bg-gray-700 border-none">
@@ -122,24 +122,24 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="text-orange-500 text-2xl">Loading dashboard data...</div>
+        <div className="text-orange-500 text-2xl">Φόρτωση δεδομένων πίνακα ελέγχου...</div>
       </div>
     )
   }
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-white">Admin Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 text-white">Πίνακας Ελέγχου Διαχειριστή</h1>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gray-800 border-none shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Calendar className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Total Bookings</span>
+              <span className="text-sm font-medium text-gray-400">Σύνολο Κρατήσεων</span>
             </div>
             <div className="text-4xl font-bold text-white mb-4">{totalBookings}</div>
             <Button asChild variant="outline" className="w-full bg-gray-700 hover:bg-gray-600 text-white border-none">
-              <Link href="/admin/bookings">View All Bookings</Link>
+              <Link href="/admin/bookings">Προβολή Όλων των Κρατήσεων</Link>
             </Button>
           </CardContent>
         </Card>
@@ -148,11 +148,11 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Clock className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Today's Bookings</span>
+              <span className="text-sm font-medium text-gray-400">Σημερινές Κρατήσεις</span>
             </div>
             <div className="text-4xl font-bold text-white mb-4">{todayBookings.length}</div>
             <Button asChild variant="outline" className="w-full bg-gray-700 hover:bg-gray-600 text-white border-none">
-              <Link href="/admin/bookings">View Today's Bookings</Link>
+              <Link href="/admin/bookings">Προβολή Σημερινών Κρατήσεων</Link>
             </Button>
           </CardContent>
         </Card>
@@ -161,11 +161,11 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <PlusCircle className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">New Booking</span>
+              <span className="text-sm font-medium text-gray-400">Νέα Κράτηση</span>
             </div>
-            <div className="text-lg text-gray-300 mb-4">Create a new booking quickly</div>
+            <div className="text-lg text-gray-300 mb-4">Δημιουργία νέας κράτησης γρήγορα</div>
             <Button asChild variant="outline" className="w-full bg-orange-500 hover:bg-orange-600 text-white border-none">
-              <Link href="/admin/new-booking">Add New Booking</Link>
+              <Link href="/admin/new-booking">Προσθήκη Νέας Κράτησης</Link>
             </Button>
           </CardContent>
         </Card>
@@ -174,11 +174,11 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Settings className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Manage Hours</span>
+              <span className="text-sm font-medium text-gray-400">Διαχείριση Ωρών</span>
             </div>
-            <div className="text-lg text-gray-300 mb-4">Update working hours</div>
+            <div className="text-lg text-gray-300 mb-4">Ενημέρωση ωρών εργασίας</div>
             <Button asChild variant="outline" className="w-full bg-gray-700 hover:bg-gray-600 text-white border-none">
-              <Link href="/admin/hours">Manage Working Hours</Link>
+              <Link href="/admin/hours">Διαχείριση Ωρών Εργασίας</Link>
             </Button>
           </CardContent>
         </Card>
@@ -189,11 +189,11 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Bell className="text-white w-8 h-8" />
-              <span className="text-sm font-medium text-white">New Bookings</span>
+              <span className="text-sm font-medium text-white">Νέες Κρατήσεις</span>
             </div>
-            <div className="text-2xl font-bold text-white mb-4">{newBookings.length} new booking(s)</div>
+            <div className="text-2xl font-bold text-white mb-4">{newBookings.length} νέα/ες κράτηση/εις</div>
             <Button onClick={() => setNewBookings([])} variant="outline" className="w-full bg-white hover:bg-gray-100 text-orange-500 border-none">
-              Clear Notifications
+              Εκκαθάριση Ειδοποιήσεων
             </Button>
           </CardContent>
         </Card>
@@ -201,8 +201,8 @@ export default function AdminDashboard() {
 
       {todayBookings.length > 0 ? renderCalendar() : (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 mt-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Today's Schedule</h2>
-          <p className="text-gray-400">No bookings for today.</p>
+          <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
+          <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
         </div>
       )}
 
