@@ -28,9 +28,13 @@ export default function AdminDashboard() {
     fetchDashboardData()
     const subscription = supabase
       .channel('bookings')
-      .on('broadcast', { event: 'INSERT' }, (payload: { type: 'broadcast', event: string, payload: { new: Booking } }) => {
-        handleNewBooking(payload.payload);
-      })
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bookings' },
+        (payload) => {
+          handleNewBooking(payload.new as Booking);
+        }
+      )
       .subscribe()
 
     return () => {
@@ -61,8 +65,8 @@ export default function AdminDashboard() {
     setIsLoading(false)
   }
 
-  const handleNewBooking = (payload: { new: Booking }) => {
-    const newBooking = payload.new
+  const handleNewBooking = (newBooking: Booking) => {
+    console.log('New booking received:', newBooking) // Add this line for debugging
     setNewBookings(prev => [...prev, newBooking])
     setTotalBookings(prev => prev + 1)
     if (newBooking.date === new Date().toISOString().split('T')[0]) {
@@ -77,7 +81,7 @@ export default function AdminDashboard() {
 
   const playNotificationSound = () => {
     if (audioRef.current) {
-      audioRef.current.play().catch(error => console.error('Error playing sound:', error))
+      audioRef.current.play().catch(error => console.error('Error playing audio:', error));
     }
   }
 
@@ -202,7 +206,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <audio ref={audioRef} src="/src/notification-sound.wav" />
+      <audio ref={audioRef} src="/notification-sound.wav" />
     </div>
   )
 }

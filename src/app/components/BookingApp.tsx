@@ -137,6 +137,11 @@ export default function BookingApp() {
 
     let current = start
     while (isBefore(current, end)) {
+      // Check if the current time slot is in the past for today's date
+      if (isSameDay(date, new Date()) && isBefore(current, new Date())) {
+        current = addMinutes(current, 30)
+        continue
+      }
       slots.push(format(current, 'HH:mm'))
       current = addMinutes(current, 30) // 30-minute intervals
     }
@@ -206,6 +211,7 @@ export default function BookingApp() {
   const calculateTotalPrice = () => {
     if (selectedServices.length === 0) return 0
 
+    // Check for special combinations first
     if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενιάδα')) {
       return 15
     }
@@ -219,6 +225,7 @@ export default function BookingApp() {
       return 26
     }
 
+    // If no special combination, calculate the sum
     return selectedServices.reduce((total, serviceName) => {
       const service = services.find(s => s.name === serviceName)
       return total + (service ? service.price : 0)
@@ -270,25 +277,34 @@ export default function BookingApp() {
   }
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validateEmail(bookingDetails.email) || !validatePhoneNumber(bookingDetails.phoneNumber)) {
-      return // Don't submit if validation fails
-    }
-    if (!selectedDate || !selectedTime || selectedServices.length === 0) return
+    e.preventDefault();
+    console.log('Booking submission started');
 
-    const correctAnswer = mathChallenge.num1 + mathChallenge.num2
+    if (!validateEmail(bookingDetails.email) || !validatePhoneNumber(bookingDetails.phoneNumber)) {
+      console.log('Validation failed');
+      return;
+    }
+
+    if (!selectedDate || !selectedTime || selectedServices.length === 0) {
+      console.log('Required fields are missing');
+      return;
+    }
+
+    const correctAnswer = mathChallenge.num1 + mathChallenge.num2;
     if (parseInt(mathChallenge.answer) !== correctAnswer) {
+      console.log('Math challenge failed');
       toast({
         variant: "destructive",
         title: "Error",
         description: "Incorrect answer to the math challenge. Please try again.",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     
     try {
+      console.log('Checking if user exists');
       // First, check if the user exists
       const { data: existingUser, error: userError } = await supabase
         .from('users')
@@ -329,7 +345,7 @@ export default function BookingApp() {
         userId = newUser.id
       }
 
-      // Now create the booking
+      console.log('Creating booking');
       const { error: bookingError } = await supabase
         .from('bookings')
         .insert([
@@ -341,31 +357,32 @@ export default function BookingApp() {
             phonenumber: bookingDetails.phoneNumber,
             email: bookingDetails.email,
             status: 'pending',
-            user_id: userId,
-            duration: 30 // All combinations result in 30 minutes total
+            user_id: userId
+            // Removed the 'duration' field
           }
-        ])
+        ]);
 
-      if (bookingError) throw bookingError
+      if (bookingError) throw bookingError;
 
-      setIsBookingDialogOpen(false)
-      setIsSuccessDialogOpen(true)
+      console.log('Booking created successfully');
+      setIsBookingDialogOpen(false);
+      setIsSuccessDialogOpen(true);
       toast({
         title: "Success",
         description: "Your booking has been created successfully.",
-      })
+      });
 
       // Refresh available times after successful booking
-      fetchAvailableTimes(selectedDate)
+      fetchAvailableTimes(selectedDate);
     } catch (error) {
-      console.error('Error creating booking:', error)
+      console.error('Error creating booking:', error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to create booking. Please try again.",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -502,7 +519,7 @@ export default function BookingApp() {
         </TabsList>
         <TabsContent value="booking" className="mt-0">
           <div className="p-4">
-            <div className="mb-6 glass-effect rounded-xl p-4">
+            <div className="mb-2 glass-effect rounded-xl p-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">{greekMonths[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
                 <div className="flex space-x-2">
@@ -734,33 +751,35 @@ export default function BookingApp() {
                 />
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               </div>
-              <div className="relative">
-                <Label htmlFor="phone" className="sr-only">Αριθμός Τηλεφώνου</Label>
-                <Input
-                  id="phone"
-                  className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                  placeholder="Αριθμός Τηλεφώνου (ξεκινάει με 69)"
-                  value={bookingDetails.phoneNumber}
-                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                  required
-                />
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="relative flex-1">
+                  <Label htmlFor="phone" className="sr-only">Αριθμός Τηλεφώνου</Label>
+                  <Input
+                    id="phone"
+                    className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
+                    placeholder="Τηλέφωνο (69...)"
+                    value={bookingDetails.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    required
+                  />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                </div>
+                <div className="relative flex-1">
+                  <Label htmlFor="email" className="sr-only">Διεύθυνση Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
+                    placeholder="Email"
+                    value={bookingDetails.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    required
+                  />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                </div>
               </div>
-              <div className="relative">
-                <Label htmlFor="email" className="sr-only">Διεύθυνση Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                  placeholder="Διεύθυνση Email"
-                  value={bookingDetails.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  required
-                />
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-              </div>
+              {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
             <div className="bg-gray-900 p-4 rounded-xl space-y-2">
               <h4 className="font-semibold text-lg mb-2">Λεπτομέρειες Κράτησης</h4>
