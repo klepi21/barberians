@@ -217,7 +217,7 @@ export default function BookingApp() {
     if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενειάδα')) {
       return 15
     }
-    if (selectedServices.includes('Shaver') && selectedServices.includes('Γενειάδα')) {
+    if (selectedServices.includes('Shaver') && selectedServices.includes('Γενιάδα')) {
       return 16
     }
     if (selectedServices.includes('Shaver') && selectedServices.includes('Ξύρισμα')) {
@@ -539,14 +539,14 @@ export default function BookingApp() {
                   <div key={day} className="text-center text-sm font-bold text-gray-400">{day}</div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-1 overflow-hidden">
                 {Array.from({ length: firstDayOfMonth }).map((_, index) => (
                   <div key={`empty-${index}`} className="h-10" />
                 ))}
                 {Array.from({ length: daysInMonth }).map((_, index) => {
-                  const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1)
-                  const isSelected = selectedDate?.toDateString() === date.toDateString()
-                  const isDisabled = isDateDisabled(date)
+                  const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+                  const isSelected = selectedDate?.toDateString() === date.toDateString();
+                  const isDisabled = isDateDisabled(date);
                   return (
                     <Button
                       key={index}
@@ -563,7 +563,7 @@ export default function BookingApp() {
                     >
                       {index + 1}
                     </Button>
-                  )
+                  );
                 })}
               </div>
             </div>

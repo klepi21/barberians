@@ -1,3 +1,5 @@
+'use client';
+
 import BookingApp from './components/BookingApp'
 
 export default function Home() {
@@ -10,8 +12,8 @@ export default function Home() {
       <style jsx>{`
         @media (max-width: 375px) { /* Adjust the max-width as needed */
           main {
-            padding: 2rem; /* Adjust padding for smaller devices */
-            max-width: 90%; /* Limit the width for smaller screens */
+           
+            max-width: 85%; /* Limit the width for smaller screens */
           }
         }
       `}</style>
