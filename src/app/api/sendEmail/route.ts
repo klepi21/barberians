@@ -44,8 +44,19 @@
            html: htmlTemplate, // Use the HTML template
        };
 
-       // Send email
+       // Send email to the user
        const info = await transporter.sendMail(mailOptions);
+
+       // Set up email data for admin notification
+       const adminMailOptions = {
+           from: 'barberian@resvly.gr', // Sender address
+           to: 'barberian@resvly.gr', // Admin email
+           subject: 'New Booking Notification', // Subject line
+           text: `New booking received from ${bookingDetails.fullName} on ${bookingDetails.date} at ${bookingDetails.time}.`, // Include date and time
+       };
+
+       // Send email to admin
+       await transporter.sendMail(adminMailOptions);
 
        return NextResponse.json({ message: 'Email sent successfully', info }, { status: 200 });
      } catch (error) {
