@@ -473,7 +473,7 @@ export default function BookingApp() {
               <AvatarFallback>BC</AvatarFallback>
             </Avatar>
             <div className="flex-grow">
-              <h1 className="text-2xl font-bold">BARBERIANS CUTS ON THE ROCKS</h1>
+              <h1 className="text-xl font-bold">BARBERIANS CUTS ON THE ROCKS</h1>
               <div className="flex items-center">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 {/* <span className="ml-1">4.8 (114)</span> */}
