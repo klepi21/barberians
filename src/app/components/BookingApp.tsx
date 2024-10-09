@@ -375,7 +375,7 @@ export default function BookingApp() {
       });
 
       // Send confirmation email via API
-      await fetch('/api/sendEmail', {
+      const response = await fetch('/api/sendEmail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -389,6 +389,17 @@ export default function BookingApp() {
           },
         }),
       });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Error sending email:', data.error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to send confirmation email. Please try again.",
+        });
+        return;
+      }
 
       // Refresh available times after successful booking
       fetchAvailableTimes(selectedDate);
