@@ -195,10 +195,10 @@ export default function BookingApp() {
         : [...prev, serviceName]
 
       // Handle special combinations
-      if (newServices.includes('Ανδρικό') && newServices.includes('Γενιάδα')) {
+      if (newServices.includes('Ανδρικό') && newServices.includes('Γενειάδα')) {
         return ['Ανδρικό', 'Γενιάδα']
       }
-      if (newServices.includes('Shaver') && newServices.includes('Γενιάδα')) {
+      if (newServices.includes('Shaver') && newServices.includes('Γενειάδα')) {
         return ['Shaver', 'Γενιάδα']
       }
       if ((newServices.includes('Shaver') || newServices.includes('Ανδρικό')) && newServices.includes('Ξύρισμα')) {
@@ -214,7 +214,7 @@ export default function BookingApp() {
     if (selectedServices.length === 0) return 0
 
     // Check for special combinations first
-    if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενιάδα')) {
+    if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενειάδα')) {
       return 15
     }
     if (selectedServices.includes('Shaver') && selectedServices.includes('Γενιάδα')) {
