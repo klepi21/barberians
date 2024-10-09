@@ -217,7 +217,7 @@ export default function BookingApp() {
     if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενειάδα')) {
       return 15
     }
-    if (selectedServices.includes('Shaver') && selectedServices.includes('Γενιάδα')) {
+    if (selectedServices.includes('Shaver') && selectedServices.includes('Γενειάδα')) {
       return 16
     }
     if (selectedServices.includes('Shaver') && selectedServices.includes('Ξύρισμα')) {
