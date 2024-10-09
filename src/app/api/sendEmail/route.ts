@@ -23,8 +23,9 @@
 
        await sgMail.send(msg); // Use SendGrid to send the email
        return NextResponse.json({ message: 'Email sent successfully' }, { status: 200 });
-     } catch (error) {
-       console.error('Error sending email:', error); // Log the error
-       return NextResponse.json({ error: 'Error sending email', details: (error as Error).message }, { status: 500 });
+     } catch (error: unknown) {
+       const errorMessage = (error as Error).message || 'Unknown error'; // Type assertion to Error
+       console.error('Error sending email:', (error as any).response ? (error as any).response.body : error); // Log detailed error response
+       return NextResponse.json({ error: 'Error sending email', details: errorMessage }, { status: 500 });
      }
    }
