@@ -19,7 +19,6 @@ import Image from 'next/image'
 import oldsIcon from '@/images/olds.png'
 import profile from '@/images/profile.jpg'
 import cover from '@/images/cover.jpg'
-import { sendBookingEmail } from '@/utils/emailService'; // Import the email service
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Ανδρικό', price: 13, duration: 30 },
