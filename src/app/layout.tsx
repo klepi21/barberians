@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Head from 'next/head'; // Import Head from next/head
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,12 +25,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+    <>
+      <Head>
+        <link rel="icon" href="src/images/profile.jpg" /> {/* Update the href to your favicon path */}
+        {/* You can also specify other formats if needed */}
+        {/* <link rel="icon" type="image/png" href="/favicon.png" /> */}
+      </Head>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          {children}
+        </body>
+      </html>
+    </>
   );
 }
