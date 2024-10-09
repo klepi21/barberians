@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 import { supabase } from '@/utils/supabase'
 import { Calendar, Clock, PlusCircle, Settings, User, Bell } from 'lucide-react'
@@ -17,7 +18,13 @@ type Booking = {
   fullname: string
 }
 
-export default function AdminDashboard() {
+const PIN = '1234'  // Replace with your desired PIN
+
+export default function ProtectedAdminDashboard() {
+  const [enteredPin, setEnteredPin] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showPinInput, setShowPinInput] = useState(true)
+
   const [totalBookings, setTotalBookings] = useState(0)
   const [todayBookings, setTodayBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -25,22 +32,46 @@ export default function AdminDashboard() {
   const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
-    fetchDashboardData()
-    const subscription = supabase
-      .channel('bookings')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'bookings' },
-        (payload) => {
-          handleNewBooking(payload.new as Booking);
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(subscription)
+    const storedAuth = sessionStorage.getItem('adminAuthenticated')
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true)
+      setShowPinInput(false)
+      fetchDashboardData()
     }
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDashboardData()
+      const subscription = supabase
+        .channel('bookings')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'bookings' },
+          (payload) => {
+            handleNewBooking(payload.new as Booking);
+          }
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(subscription)
+      }
+    }
+  }, [isAuthenticated])
+
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (enteredPin === PIN) {
+      setIsAuthenticated(true)
+      setShowPinInput(false)
+      sessionStorage.setItem('adminAuthenticated', 'true')
+      fetchDashboardData()
+    } else {
+      alert('Incorrect PIN. Please try again.')
+      setEnteredPin('')
+    }
+  }
 
   const fetchDashboardData = async () => {
     setIsLoading(true)
@@ -66,7 +97,7 @@ export default function AdminDashboard() {
   }
 
   const handleNewBooking = (newBooking: Booking) => {
-    console.log('Λήφθηκε νέα κράτηση:', newBooking) // Προσθήκη αυτής της γραμμής για αποσφαλμάτωση
+    console.log('Λήφθηκε νέα κράτηση:', newBooking)
     setNewBookings(prev => [...prev, newBooking])
     setTotalBookings(prev => prev + 1)
     if (newBooking.date === new Date().toISOString().split('T')[0]) {
@@ -115,6 +146,30 @@ export default function AdminDashboard() {
             </Card>
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (showPinInput) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <Card className="w-full max-w-md bg-gray-800 border-none shadow-lg">
+          <CardContent className="p-6">
+            <h1 className="text-2xl font-bold mb-6 text-white text-center">Admin Authentication</h1>
+            <form onSubmit={handlePinSubmit}>
+              <Input
+                type="password"
+                placeholder="Enter PIN"
+                value={enteredPin}
+                onChange={(e) => setEnteredPin(e.target.value)}
+                className="mb-4 bg-gray-700 text-white border-none"
+              />
+              <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                Submit
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     )
   }
