@@ -480,7 +480,7 @@ export default function BookingApp() {
                 <span className="ml-2 text-orange-400">Μπαρμπέρης</span>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-1">
               
               <a href="tel:2316010977" className="p-2">
                 <Phone className="w-6 h-6" />
