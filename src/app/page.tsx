@@ -6,6 +6,15 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24 max-w-screen-sm mx-auto bg-black">
         <BookingApp />
       </main>
+      {/* Add media query for smaller devices */}
+      <style jsx>{`
+        @media (max-width: 375px) { /* Adjust the max-width as needed */
+          main {
+            padding: 2rem; /* Adjust padding for smaller devices */
+            max-width: 90%; /* Limit the width for smaller screens */
+          }
+        }
+      `}</style>
     </div>
   )
 }
