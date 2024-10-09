@@ -375,11 +375,20 @@ export default function BookingApp() {
         description: "Your booking has been created successfully.",
       });
 
-      // Send confirmation email
-      await sendBookingEmail(bookingDetails.email, {
-        date: format(selectedDate, 'yyyy-MM-dd'),
-        time: selectedTime,
-        services: selectedServices,
+      // Send confirmation email via API
+      await fetch('/api/sendEmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail: bookingDetails.email,
+          bookingDetails: {
+            date: format(selectedDate, 'yyyy-MM-dd'),
+            time: selectedTime,
+            services: selectedServices,
+          },
+        }),
       });
 
       // Refresh available times after successful booking
