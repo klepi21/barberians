@@ -273,7 +273,7 @@ export default function BookingApp() {
     } else if (field === 'phoneNumber') {
       setErrors(prev => ({
         ...prev,
-        phoneNumber: validatePhoneNumber(value) ? '' : 'Ο αριθμός τηλεφώνου πρέπει να ξεκινάει με 69 και να έχει 10 ψηφία'
+        phoneNumber: validatePhoneNumber(value) ? '' : 'Ο αριθμό�� τηλεφώνου πρέπει να ξεκινάει με 69 και να έχει 10 ψηφία'
       }))
     }
   }
@@ -374,9 +374,9 @@ export default function BookingApp() {
         description: "Your booking has been created successfully.",
       });
 
-      // Send confirmation email via API
+      // Send confirmation email via your API
       const response = await fetch('/api/sendEmail', {
-        method: 'POST', // Ensure this is POST
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -385,7 +385,9 @@ export default function BookingApp() {
           bookingDetails: {
             date: format(selectedDate, 'yyyy-MM-dd'),
             time: selectedTime,
-            services: selectedServices,
+            services: selectedServices.join(', '), // Join services into a string
+            fullName: bookingDetails.fullName, // Include full name
+            phoneNumber: bookingDetails.phoneNumber, // Include phone number
           },
         }),
       });

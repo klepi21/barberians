@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #2a2a2a;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(255, 128, 0, 0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: #ff8000;
+            color: #1a1a1a;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .content {
+            padding: 30px;
+            color: #e0e0e0;
+        }
+        .footer {
+            background: #1a1a1a;
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .details {
+            margin: 25px 0;
+            background: #333;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .details div {
+            margin-bottom: 12px;
+        }
+        .details strong {
+            color: #ff8000;
+            font-weight: bold;
+        }
+        .logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #ff8000;
+            color: #1a1a1a;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #e67300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://i.ibb.co/jHWkxfd/profile.jpg" alt="Λογότυπο Barberians" class="logo" style="max-width: 150px;">
+            <h1>Επιβεβαίωση Κράτησης</h1>
+        </div>
+        <div class="content">
+            <h2>Σας ευχαριστούμε που επιλέξατε τους Barberians, {{fullName}}!</h2>
+            <p>Είμαστε ενθουσιασμένοι να επιβεβαιώσουμε το επερχόμενο ραντεβού σας. Ακολουθούν οι λεπτομέρειες:</p>
+            <div class="details">
+                <div><strong>Όνομα:</strong> {{fullName}}</div>
+                <div><strong>Τηλέφωνο:</strong> {{phoneNumber}}</div>
+                <div><strong>Ημερομηνία:</strong> {{date}}</div>
+                <div><strong>Ώρα:</strong> {{time}}</div>
+                <div><strong>Υπηρεσίες:</strong> {{services}}</div>
+            </div>
+            <p>Ανυπομονούμε να σας προσφέρουμε μια φανταστική εμπειρία περιποίησης!</p>
+            <p>Αν χρειαστεί να κάνετε οποιεσδήποτε αλλαγές, παρακαλούμε επικοινωνήστε μαζί μας τουλάχιστον 24 ώρες πριν από το ραντεβού σας.</p>
+            
+        </div>
+        <div class="footer">
+            <p>2024Barberians. Όλα τα δικαιώματα διατηρούνται.</p>
+            <p>Filikis Eterias 15, Thessaloniki 546 21</p>
+        </div>
+    </div>
+</body>
+</html>
