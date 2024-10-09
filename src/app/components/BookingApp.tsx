@@ -376,7 +376,7 @@ export default function BookingApp() {
 
       // Send confirmation email via API
       const response = await fetch('/api/sendEmail', {
-        method: 'POST',
+        method: 'POST', // Ensure this is POST
         headers: {
           'Content-Type': 'application/json',
         },

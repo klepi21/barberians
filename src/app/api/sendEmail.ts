@@ -11,14 +11,17 @@
    });
 
    const sendEmail = async (req: NextApiRequest, res: NextApiResponse) => {
+     console.log('Received request:', req.method); // Log the request method
      if (req.method === 'POST') {
        const { userEmail, bookingDetails } = req.body;
 
        console.log('Sending email to:', userEmail); // Log the email address
+       console.log('Booking details:', bookingDetails); // Log booking details
+
        const mailOptions = {
          from: process.env.EMAIL_USER,
          to: userEmail,
-         cc: process.env.PERSONAL_EMAIL, // Add your personal email here
+         cc: process.env.PERSONAL_EMAIL, // Your personal email
          subject: 'Booking Confirmation',
          text: `Your booking has been confirmed!\n\nDetails:\nDate: ${bookingDetails.date}\nTime: ${bookingDetails.time}\nServices: ${bookingDetails.services.join(', ')}\n\nThank you!`,
        };
