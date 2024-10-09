@@ -383,7 +383,7 @@ export default function BookingApp() {
         body: JSON.stringify({
           userEmail: bookingDetails.email,
           bookingDetails: {
-            date: format(selectedDate, 'yyyy-MM-dd'),
+            date: format(selectedDate, 'dd-MM-yyyy'),
             time: selectedTime,
             services: selectedServices.join(', '), // Join services into a string
             fullName: bookingDetails.fullName, // Include full name
