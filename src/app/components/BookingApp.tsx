@@ -17,6 +17,8 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { format, addMinutes, parse, isAfter, isBefore, startOfDay, endOfDay, isSameDay, setHours, setMinutes, isEqual } from 'date-fns'
 import Image from 'next/image'
 import oldsIcon from '@/images/olds.png'
+import profile from '@/images/profile.jpg'
+import cover from '@/images/cover.jpg'
 
 const HARDCODED_SERVICES: Service[] = [
   { name: 'Ανδρικό', price: 13, duration: 30 },
@@ -459,7 +461,7 @@ export default function BookingApp() {
     <div className="max-w-md mx-auto bg-black text-white rounded-3xl shadow-lg overflow-hidden">
       <div className="relative h-64">
         <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-lH2W7JXnk7kGYHhdp5D5hpP30q71oa.png"
+          src={cover.src}
           alt="Εσωτερικό κουρείου"
           className="w-full h-full object-cover"
         />
@@ -467,7 +469,7 @@ export default function BookingApp() {
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-end space-x-4">
             <Avatar className="w-20 h-20 border-2 border-white">
-              <AvatarImage src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%CE%A3%CF%84%CE%B9%CE%B3%CE%BC%CE%B9%CE%BF%CC%81%CF%84%CF%85%CF%80%CE%BF%20%CE%BF%CE%B8%CE%BF%CC%81%CE%BD%CE%B7%CF%82%202024-10-02,%207.08.15%E2%80%AF%CE%BC%CE%BC-Mn4SQF4bF8fy3jcbTM1T2cvJUGrqt6.png" alt="BARBERIANS CUTS ON THE ROCKS" />
+              <AvatarImage src={profile.src} alt="BARBERIANS CUTS ON THE ROCKS" />
               <AvatarFallback>BC</AvatarFallback>
             </Avatar>
             <div className="flex-grow">
