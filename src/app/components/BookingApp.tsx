@@ -481,28 +481,16 @@ export default function BookingApp() {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Heart className="w-6 h-6" />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="w-6 h-6" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-gray-800 text-white">
-                  <DropdownMenuItem className="flex items-center">
-                    <a href="tel:2316010977">
-                      <Phone className="mr-2 h-4 w-4" />
-                      <span>Καλέστε μας</span>
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center">
-                    <a href="https://www.google.com/maps/dir//Filikis+Eterias+15,+Thessaloniki+546+21/@40.6279005,22.8673078,12z/data=!3m1!4b1!4m8!4m7!1m0!1m5!1m1!1s0x14a83903c59007b1:0xbd7c57bd75971848!2m2!1d22.9497087!2d40.6279298?entry=ttu&g_ep=EgoyMDI0MTAwNS4yIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">
-                      <MapPin className="mr-2 h-4 w-4" />
-                      <span>Οδηγίες</span>
-                    </a>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              
+              <a href="tel:2316010977" className="p-2">
+                <Phone className="w-6 h-6" />
+              </a>
+              <a href="https://www.google.com/maps/dir//Filikis+Eterias+15,+Thessaloniki+546+21/@40.6279005,22.8673078,12z/data=!3m1!4b1!4m8!4m7!1m0!1m5!1m1!1s0x14a83903c59007b1:0xbd7c57bd75971848!2m2!1d22.9497087!2d40.6279298?entry=ttu&g_ep=EgoyMDI0MTAwNS4yIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="p-2">
+                <MapPin className="w-6 h-6" />
+              </a>
+              <Button variant="ghost" size="icon">
+                <Heart className="w-6 h-6" />
+              </Button>
             </div>
           </div>
         </div>
