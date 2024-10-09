@@ -40,7 +40,7 @@
        const mailOptions = {
            from: 'barberian@resvly.gr', // Sender address
            to: userEmail, // List of receivers
-           subject: 'Booking Confirmation', // Subject line
+           subject: 'Επιβεβαίωση Κράτησης - Barberians', // Subject line
            html: htmlTemplate, // Use the HTML template
        };
 
