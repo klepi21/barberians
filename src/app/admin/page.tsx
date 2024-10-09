@@ -21,7 +21,7 @@ type Booking = {
 const PIN = '1234'  // Replace with your desired PIN
 
 export default function ProtectedAdminDashboard() {
-  const [enteredPin, setEnteredPin] = useState('')
+  const [pinInput, setPinInput] = useState<string[]>([]); // Change to store individual pin inputs
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showPinInput, setShowPinInput] = useState(true)
 
@@ -60,18 +60,25 @@ export default function ProtectedAdminDashboard() {
     }
   }, [isAuthenticated])
 
+  const handlePinButtonClick = (number: string) => {
+    if (pinInput.length < 4) { // Limit to 4 digits
+      setPinInput(prev => [...prev, number]);
+    }
+  };
+
   const handlePinSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    const enteredPin = pinInput.join(''); // Join the array to form the PIN
     if (enteredPin === PIN) {
       setIsAuthenticated(true)
       setShowPinInput(false)
       sessionStorage.setItem('adminAuthenticated', 'true')
       fetchDashboardData()
     } else {
-      alert('Incorrect PIN. Please try again.')
-      setEnteredPin('')
+      alert('Incorrect PIN. Please try again.');
+      setPinInput([]);
     }
-  }
+  };
 
   const fetchDashboardData = async () => {
     setIsLoading(true)
@@ -156,18 +163,22 @@ export default function ProtectedAdminDashboard() {
         <Card className="w-full max-w-md bg-gray-800 border-none shadow-lg">
           <CardContent className="p-6">
             <h1 className="text-2xl font-bold mb-6 text-white text-center">Admin Authentication</h1>
-            <form onSubmit={handlePinSubmit}>
-              <Input
-                type="password"
-                placeholder="Enter PIN"
-                value={enteredPin}
-                onChange={(e) => setEnteredPin(e.target.value)}
-                className="mb-4 bg-gray-700 text-white border-none"
-              />
-              <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white">
-                Submit
+            <div className="mb-4 text-white text-center">
+              {pinInput.join(' ')} {/* Display the entered PIN */}
+            </div>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                <Button key={num} onClick={() => handlePinButtonClick(num.toString())} className="bg-gray-700 text-white">
+                  {num}
+                </Button>
+              ))}
+              <Button onClick={() => handlePinButtonClick('0')} className="bg-gray-700 text-white col-span-3">
+                0
               </Button>
-            </form>
+            </div>
+            <Button onClick={handlePinSubmit} className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+              Submit
+            </Button>
           </CardContent>
         </Card>
       </div>
