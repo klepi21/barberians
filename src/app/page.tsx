@@ -13,7 +13,7 @@ export default function Home() {
         @media (max-width: 375px) { /* Adjust the max-width as needed */
           main {
            
-            max-width: 85%; /* Limit the width for smaller screens */
+            max-width: 90%; /* Limit the width for smaller screens */
           }
         }
       `}</style>
