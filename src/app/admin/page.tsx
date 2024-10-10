@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 import { supabase } from '@/utils/supabase'
-import { Calendar, Clock, PlusCircle, Settings, User, Bell } from 'lucide-react'
+import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { toast } from "@/components/ui/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type Booking = {
   id: number
@@ -16,6 +17,7 @@ type Booking = {
   time: string
   service: string
   fullname: string
+  status: string
 }
 
 const PIN = '1234'  // Replace with your desired PIN
@@ -126,10 +128,22 @@ export default function ProtectedAdminDashboard() {
     }
   }
 
+  const handleUpdateBookingStatus = async (id: number, status: string) => {
+    // Update the booking status in the database
+    await supabase
+      .from('bookings')
+      .update({ status })
+      .eq('id', id);
+    
+    // Fetch updated bookings
+    fetchDashboardData();
+  };
+
   const renderCalendar = () => {
     const bookingsByHour: { [key: string]: Booking[] } = {}
 
     todayBookings.forEach(booking => {
+      if (booking.status === 'cancelled') return; // Skip cancelled bookings
       const hour = booking.time.split(':')[0]
       if (!bookingsByHour[hour]) {
         bookingsByHour[hour] = []
@@ -153,15 +167,30 @@ export default function ProtectedAdminDashboard() {
                       <div className="flex items-center mb-2">
                         <User className="text-orange-400 mr-2" />
                         <p className="text-white font-medium">{booking.fullname}</p>
+                        {booking.status === 'done' && <CheckCircle className="text-green-500 ml-2" />}
+                        {booking.status === 'pending' && <span className="text-yellow-500 ml-2">Pending</span>}
                       </div>
                       <div className="flex items-center mb-2">
                         <Clock className="text-orange-400 mr-2" />
-                        <p className="text-gray-300">{booking.time.split(':').slice(0, 2).join(':')}</p> {/* Hide seconds */}
+                        <p className="text-gray-300">{booking.time.split(':').slice(0, 2).join(':')}</p>
                       </div>
                       <div className="flex items-center">
                         <PlusCircle className="text-orange-400 mr-2" />
                         <p className="text-gray-300">{booking.service}</p>
                       </div>
+                      <Select
+                        value={booking.status}
+                        onValueChange={(value) => handleUpdateBookingStatus(booking.id!, value)}
+                      >
+                        <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
+                          <SelectValue placeholder="Ενημέρωση κατάστασης" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 text-white border-gray-700">
+                          <SelectItem value="pending" className="hover:bg-gray-700">Εκκρεμεί</SelectItem>
+                          <SelectItem value="done" className="hover:bg-gray-700">Ολοκληρώθηκε</SelectItem>
+                          <SelectItem value="cancelled" className="hover:bg-gray-700">Ακυρώθηκε</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   ))}
                 </div>
