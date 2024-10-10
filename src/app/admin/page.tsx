@@ -81,27 +81,29 @@ export default function ProtectedAdminDashboard() {
   };
 
   const fetchDashboardData = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     const today = new Date(); // Get the current date in local time
     const localDate = today.toISOString().split('T')[0]; // Format to YYYY-MM-DD
+    console.log('Fetching bookings for date:', localDate); // Log the date being fetched
 
     const { count: total } = await supabase
       .from('bookings')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true });
 
     const { data: todayData, error } = await supabase
       .from('bookings')
       .select('*')
       .eq('date', localDate) // Use local date for fetching bookings
-      .order('time')
+      .order('time');
 
     if (error) {
-      console.error('Σφάλμα κατά τη λήψη των κρατήσεων:', error)
+      console.error('Error fetching bookings:', error);
     } else {
-      setTotalBookings(total || 0)
-      setTodayBookings(todayData as Booking[] || [])
+      console.log('Fetched bookings:', todayData); // Log the fetched bookings
+      setTotalBookings(total || 0);
+      setTodayBookings(todayData as Booking[] || []);
     }
-    setIsLoading(false)
+    setIsLoading(false);
   }
 
   const handleNewBooking = (newBooking: Booking) => {
