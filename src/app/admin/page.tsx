@@ -82,8 +82,12 @@ export default function ProtectedAdminDashboard() {
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
-    const today = new Date(); // Get the current date in local time
-    const localDate = today.toISOString().split('T')[0]; // Format to YYYY-MM-DD
+    
+    // Get the current date in Greece's timezone
+    const today = new Date();
+    const options = { timeZone: 'Europe/Athens', year: 'numeric' as const, month: '2-digit' as const, day: '2-digit' as const };
+    const localDate = new Intl.DateTimeFormat('en-GR', options).format(today); // Format to YYYY-MM-DD
+
     console.log('Fetching bookings for date:', localDate); // Log the date being fetched
 
     const { count: total } = await supabase
