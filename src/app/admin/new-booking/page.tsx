@@ -32,16 +32,26 @@ export default function NewBookingPage() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Log the booking details
+    console.log(bookingDetails); // Log the booking details
+
+    // Prepare the data to be inserted
+    const insertData = {
+        date: bookingDetails.date ? format(bookingDetails.date, 'yyyy-MM-dd') : null,
+        time: bookingDetails.time,
+        service: bookingDetails.services.join(','), // Only keep 'service'
+        fullname: bookingDetails.fullname,
+        phonenumber: bookingDetails.phonenumber,
+        email: bookingDetails.email,
+        status: 'pending'
+    };
+
+    // Log the data being sent to Supabase
+    console.log('Data to be inserted:', insertData);
+
     const { data, error } = await supabase
       .from('bookings')
-      .insert([
-        {
-          ...bookingDetails,
-          date: bookingDetails.date ? format(bookingDetails.date, 'yyyy-MM-dd') : null,
-          service: bookingDetails.services.join(','), // Change 'services' to 'service'
-          status: 'pending'
-        }
-      ])
+      .insert([insertData]);
 
     setIsLoading(false)
 
@@ -57,8 +67,16 @@ export default function NewBookingPage() {
         title: "Success",
         description: "New booking created successfully.",
       })
-      // Redirect to a success page or refresh the current page
-      router.push('/admin/booking-success')
+      
+      // Clear the form by resetting the bookingDetails state
+      setBookingDetails({
+        date: undefined,
+        time: '',
+        services: [],
+        fullname: '',
+        phonenumber: '',
+        email: '',
+      });
     }
   }
 
