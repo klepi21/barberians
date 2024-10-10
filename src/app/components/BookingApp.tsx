@@ -253,7 +253,7 @@ export default function BookingApp() {
   }
 
   const validateEmail = (email: string) => {
-    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|gr|co\.uk)$/
     return re.test(email)
   }
 
@@ -273,7 +273,7 @@ export default function BookingApp() {
     } else if (field === 'phoneNumber') {
       setErrors(prev => ({
         ...prev,
-        phoneNumber: validatePhoneNumber(value) ? '' : 'Ο αριθμό�� τηλεφώνου πρέπει να ξεκινάει με 69 και να έχει 10 ψηφία'
+        phoneNumber: validatePhoneNumber(value) ? '' : 'Ο αριθμό τηλεφώνου πρέπει να ξεκινάει με 69 και να έχει 10 ψηφία'
       }))
     }
   }
