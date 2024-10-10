@@ -38,6 +38,7 @@ export default function NewBookingPage() {
         {
           ...bookingDetails,
           date: bookingDetails.date ? format(bookingDetails.date, 'yyyy-MM-dd') : null,
+          service: bookingDetails.services.join(','), // Change 'services' to 'service'
           status: 'pending'
         }
       ])
