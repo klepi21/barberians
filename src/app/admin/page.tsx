@@ -82,7 +82,8 @@ export default function ProtectedAdminDashboard() {
 
   const fetchDashboardData = async () => {
     setIsLoading(true)
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date(); // Get the current date in local time
+    const localDate = today.toISOString().split('T')[0]; // Format to YYYY-MM-DD
 
     const { count: total } = await supabase
       .from('bookings')
@@ -91,7 +92,7 @@ export default function ProtectedAdminDashboard() {
     const { data: todayData, error } = await supabase
       .from('bookings')
       .select('*')
-      .eq('date', today)
+      .eq('date', localDate) // Use local date for fetching bookings
       .order('time')
 
     if (error) {
