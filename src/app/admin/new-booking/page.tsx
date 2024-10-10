@@ -32,6 +32,17 @@ export default function NewBookingPage() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Check if at least one service is selected
+    if (bookingDetails.services.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select at least one service.",
+      })
+      setIsLoading(false)
+      return; // Prevent form submission
+    }
+
     // Log the booking details
     console.log(bookingDetails); // Log the booking details
 
