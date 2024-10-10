@@ -21,7 +21,7 @@ type Booking = {
 const PIN = '1234'  // Replace with your desired PIN
 
 export default function ProtectedAdminDashboard() {
-  const [pinInput, setPinInput] = useState<string[]>([]); // Change to store individual pin inputs
+  const [pinInput, setPinInput] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showPinInput, setShowPinInput] = useState(true)
 
@@ -61,14 +61,14 @@ export default function ProtectedAdminDashboard() {
   }, [isAuthenticated])
 
   const handlePinButtonClick = (number: string) => {
-    if (pinInput.length < 4) { // Limit to 4 digits
+    if (pinInput.length < 4) {
       setPinInput(prev => [...prev, number]);
     }
   };
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const enteredPin = pinInput.join(''); // Join the array to form the PIN
+    const enteredPin = pinInput.join('');
     if (enteredPin === PIN) {
       setIsAuthenticated(true)
       setShowPinInput(false)
@@ -83,12 +83,9 @@ export default function ProtectedAdminDashboard() {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     
-    // Get the current date in Greece's timezone
     const today = new Date();
     const options = { timeZone: 'Europe/Athens', year: 'numeric' as const, month: '2-digit' as const, day: '2-digit' as const };
-    const localDate = new Intl.DateTimeFormat('en-GR', options).format(today); // Format to YYYY-MM-DD
-
-    console.log('Fetching bookings for date:', localDate); // Log the date being fetched
+    const localDate = new Intl.DateTimeFormat('en-GR', options).format(today);
 
     const { count: total } = await supabase
       .from('bookings')
@@ -97,13 +94,12 @@ export default function ProtectedAdminDashboard() {
     const { data: todayData, error } = await supabase
       .from('bookings')
       .select('*')
-      .eq('date', localDate) // Use local date for fetching bookings
+      .eq('date', localDate)
       .order('time');
 
     if (error) {
       console.error('Error fetching bookings:', error);
     } else {
-      console.log('Fetched bookings:', todayData); // Log the fetched bookings
       setTotalBookings(total || 0);
       setTodayBookings(todayData as Booking[] || []);
     }
@@ -142,20 +138,33 @@ export default function ProtectedAdminDashboard() {
     })
 
     return (
-      <div className="bg-gray-800 rounded-lg shadow-lg p-4 mt-8">
-        <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg shadow-2xl p-6 mt-8">
+        <h2 className="text-3xl font-bold text-white mb-6 text-center">Πρόγραμμα Σήμερα</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Object.entries(bookingsByHour).map(([hour, bookings]) => (
-            <Card key={hour} className="bg-gray-700 border-none">
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold text-white mb-2">{hour}:00</h3>
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-gray-600 rounded p-2 mb-2">
-                    <p className="text-white"><User className="inline-block mr-2 text-orange-500" />{booking.fullname}</p>
-                    <p className="text-gray-300"><Clock className="inline-block mr-2 text-orange-500" />{booking.time}</p>
-                    <p className="text-gray-300"><PlusCircle className="inline-block mr-2 text-orange-500" />{booking.service}</p>
-                  </div>
-                ))}
+            <Card key={hour} className="bg-gradient-to-br from-gray-800 to-gray-700 border-none shadow-lg overflow-hidden">
+              <CardContent className="p-0">
+                <div className="bg-orange-500 text-white text-xl font-semibold py-2 px-4">
+                  {hour}:00
+                </div>
+                <div className="p-4 space-y-3">
+                  {bookings.map((booking) => (
+                    <div key={booking.id} className="bg-gray-600 rounded-lg p-3 transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                      <div className="flex items-center mb-2">
+                        <User className="text-orange-400 mr-2" />
+                        <p className="text-white font-medium">{booking.fullname}</p>
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <Clock className="text-orange-400 mr-2" />
+                        <p className="text-gray-300">{booking.time.split(':').slice(0, 2).join(':')}</p> {/* Hide seconds */}
+                      </div>
+                      <div className="flex items-center">
+                        <PlusCircle className="text-orange-400 mr-2" />
+                        <p className="text-gray-300">{booking.service}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -171,7 +180,7 @@ export default function ProtectedAdminDashboard() {
           <CardContent className="p-6">
             <h1 className="text-2xl font-bold mb-6 text-white text-center">Admin Authentication</h1>
             <div className="mb-4 text-white text-center">
-              {pinInput.join(' ')} {/* Display the entered PIN */}
+              {pinInput.join(' ')}
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
