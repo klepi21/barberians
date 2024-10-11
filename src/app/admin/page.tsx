@@ -10,6 +10,7 @@ import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle } from '
 import { format, parseISO } from 'date-fns'
 import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import MobileBookings from './MobileBookings'
 
 type Booking = {
   id: number
@@ -206,6 +207,8 @@ export default function ProtectedAdminDashboard() {
     )
   }
 
+  const isMobile = window.innerWidth <= 768; // Adjust the breakpoint as necessary
+
   if (showPinInput) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
@@ -314,13 +317,20 @@ export default function ProtectedAdminDashboard() {
         </Card>
       )}
 
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
-        <p className="text-gray-400">Σύνολο κρατήσεων: {todayBookings.length}</p>
-        {todayBookings.length > 0 ? renderCalendar() : (
-          <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
-        )}
-      </div>
+      {isMobile ? (
+        <MobileBookings 
+          todayBookings={todayBookings} 
+          handleUpdateBookingStatus={handleUpdateBookingStatus} 
+        />
+      ) : (
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
+          <p className="text-gray-400">Σύνολο κρατήσεων: {todayBookings.length}</p>
+          {todayBookings.length > 0 ? renderCalendar() : (
+            <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
+          )}
+        </div>
+      )}
 
       <audio ref={audioRef} src="/notification-sound.wav" />
     </div>
