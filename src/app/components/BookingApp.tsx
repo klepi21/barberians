@@ -141,18 +141,29 @@ export default function BookingApp() {
         return;
     }
 
+    // Log the fetched breaks
+    console.log('Fetched breaks:', breaks);
+
     // Filter out the slots that fall within the break times
     const breakTimes = breaks.map(b => ({
         startTime: parse(b.start_time, 'HH:mm', new Date()),
         endTime: parse(b.end_time, 'HH:mm', new Date())
     }));
 
+    // Log the break times for debugging
+    console.log('Break times:', breakTimes);
+
     setAvailableTimes(prevSlots => prevSlots.filter(slot => {
         const slotTime = parse(slot, 'HH:mm', new Date());
-        return !breakTimes.some(b => (
-            isEqual(slotTime, b.startTime) // Exclude the exact start time
-        ) && !isEqual(slotTime, b.endTime) // Exclude the exact end time
-        );
+        const isInBreak = breakTimes.some(b => (
+            isEqual(slotTime, b.startTime) || isEqual(slotTime, b.endTime) || 
+            (isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime))
+        ));
+
+        // Log the slot being checked against break times
+        console.log(`Checking slot: ${slot} against breaks:`, breakTimes);
+
+        return !isInBreak; // Exclude slots that fall within break times
     }));
   }
 
