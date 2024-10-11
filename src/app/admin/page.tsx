@@ -10,7 +10,6 @@ import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle } from '
 import { format, parseISO } from 'date-fns'
 import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import MobileBookings from './MobileBookings'
 
 type Booking = {
   id: number
@@ -33,8 +32,6 @@ export default function ProtectedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [newBookings, setNewBookings] = useState<Booking[]>([])
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [isMobile, setIsMobile] = useState(false);
-  const [localDate, setLocalDate] = useState(new Date().toLocaleDateString()); // Initialize localDate
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('adminAuthenticated')
@@ -64,19 +61,6 @@ export default function ProtectedAdminDashboard() {
       }
     }
   }, [isAuthenticated])
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint as necessary
-    };
-
-    handleResize(); // Check on mount
-    window.addEventListener('resize', handleResize); // Update on resize
-
-    return () => {
-      window.removeEventListener('resize', handleResize); // Cleanup on unmount
-    };
-  }, []);
 
   const handlePinButtonClick = (number: string) => {
     if (pinInput.length < 4) {
@@ -330,21 +314,13 @@ export default function ProtectedAdminDashboard() {
         </Card>
       )}
 
-      {isMobile ? (
-        <MobileBookings 
-          todayBookings={todayBookings} 
-          handleUpdateBookingStatus={handleUpdateBookingStatus} 
-        />
-      ) : (
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
-          <p className="text-gray-400">Fetching for date: {localDate}</p> {/* Display the date being fetched */}
-          <p className="text-gray-400">Σύνολο κρατήσεων: {todayBookings.length}</p>
-          {todayBookings.length > 0 ? renderCalendar() : (
-            <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
-          )}
-        </div>
-      )}
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
+        <p className="text-gray-400">Σύνολο κρατήσεων: {todayBookings.length}</p>
+        {todayBookings.length >= 0 ? renderCalendar() : (
+          <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
+        )}
+      </div>
 
       <audio ref={audioRef} src="/notification-sound.wav" />
     </div>
