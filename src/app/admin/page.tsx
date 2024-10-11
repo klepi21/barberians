@@ -34,6 +34,7 @@ export default function ProtectedAdminDashboard() {
   const [newBookings, setNewBookings] = useState<Booking[]>([])
   const audioRef = useRef<HTMLAudioElement>(null)
   const [isMobile, setIsMobile] = useState(false);
+  const [localDate, setLocalDate] = useState(new Date().toLocaleDateString()); // Initialize localDate
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('adminAuthenticated')
@@ -337,6 +338,7 @@ export default function ProtectedAdminDashboard() {
       ) : (
         <div>
           <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
+          <p className="text-gray-400">Fetching for date: {localDate}</p> {/* Display the date being fetched */}
           <p className="text-gray-400">Σύνολο κρατήσεων: {todayBookings.length}</p>
           {todayBookings.length > 0 ? renderCalendar() : (
             <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
