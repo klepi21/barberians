@@ -32,6 +32,12 @@ export default function WorkingHoursPage() {
   const [specificHours, setSpecificHours] = useState({ isOpen: true, start: '09:00', end: '17:00' })
   const [isLoading, setIsLoading] = useState(false)
   const [savedSpecificDates, setSavedSpecificDates] = useState<any[]>([])
+  const [breaks, setBreaks] = useState<Record<string, { start: string, end: string }[]>>(
+    daysOfWeek.reduce((acc, day) => ({
+      ...acc,
+      [day]: [] // Initialize with empty breaks
+    }), {})
+  )
   const { toast } = useToast()
 
   useEffect(() => {

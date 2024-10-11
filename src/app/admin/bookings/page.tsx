@@ -29,7 +29,13 @@ export default function BookingsPage() {
     if (error) {
       console.error('Σφάλμα κατά τη λήψη των κρατήσεων:', error)
     } else {
-      setBookings(data || [])
+      // Sort bookings by date and time
+      const sortedBookings = (data || []).sort((a, b) => {
+        const dateA = new Date(a.date + 'T' + a.time); // Combine date and time for comparison
+        const dateB = new Date(b.date + 'T' + b.time);
+        return dateA.getTime() - dateB.getTime(); // Compare timestamps
+      });
+      setBookings(sortedBookings);
     }
     setIsLoading(false)
   }
