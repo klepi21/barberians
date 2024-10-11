@@ -314,12 +314,13 @@ export default function ProtectedAdminDashboard() {
         </Card>
       )}
 
-      {todayBookings.length > 0 ? renderCalendar() : (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-4 mt-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-4">Πρόγραμμα Σήμερα</h2>
+        <p className="text-gray-400">Σύνολο κρατήσεων: {todayBookings.length}</p>
+        {todayBookings.length > 0 ? renderCalendar() : (
           <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
-        </div>
-      )}
+        )}
+      </div>
 
       <audio ref={audioRef} src="/notification-sound.wav" />
     </div>
