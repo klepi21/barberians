@@ -33,6 +33,7 @@ export default function ProtectedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [newBookings, setNewBookings] = useState<Booking[]>([])
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('adminAuthenticated')
@@ -62,6 +63,19 @@ export default function ProtectedAdminDashboard() {
       }
     }
   }, [isAuthenticated])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint as necessary
+    };
+
+    handleResize(); // Check on mount
+    window.addEventListener('resize', handleResize); // Update on resize
+
+    return () => {
+      window.removeEventListener('resize', handleResize); // Cleanup on unmount
+    };
+  }, []);
 
   const handlePinButtonClick = (number: string) => {
     if (pinInput.length < 4) {
@@ -206,8 +220,6 @@ export default function ProtectedAdminDashboard() {
       </div>
     )
   }
-
-  const isMobile = window.innerWidth <= 768; // Adjust the breakpoint as necessary
 
   if (showPinInput) {
     return (
