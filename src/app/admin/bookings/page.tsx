@@ -13,19 +13,10 @@ import { Trash2 } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
-// Define the type for special hours
-type SpecialHour = {
-    id: number; // or string, depending on your use case
-    date: string; // Add this line if it doesn't exist
-    time: string;
-    // ... other properties
-};
-
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [specialHours, setSpecialHours] = useState<SpecialHour[]>([]); // Ensure specialHours is typed correctly
 
   useEffect(() => {
     fetchBookingsForSelectedDate(selectedDate)
@@ -73,19 +64,6 @@ export default function BookingsPage() {
       console.error('Σφάλμα κατά τη διαγραφή της κράτησης:', error)
     } else {
       setBookings(bookings.filter(booking => booking.id !== id))
-    }
-  }
-
-  const deleteSpecialHour = async (id: number) => {
-    const { error } = await supabase
-      .from('special_hours') // Assuming you have a table for special hours
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Σφάλμα κατά τη διαγραφή της ειδικής ώρας:', error);
-    } else {
-      setSpecialHours(specialHours.filter((hour: SpecialHour) => hour.id !== id));
     }
   }
 
@@ -240,62 +218,6 @@ export default function BookingsPage() {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gray-800 border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500">
-          <CardTitle className="text-2xl font-bold text-white flex items-center">
-            <Calendar className="mr-2" />
-            Ειδικές Ώρες Ημερομηνίας
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-700 border-b border-gray-600">
-                  <TableHead className="text-orange-500">Ημερομηνία</TableHead>
-                  <TableHead className="text-orange-500">Ώρα</TableHead>
-                  <TableHead className="text-orange-500">Ενέργειες</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {specialHours.map((hour) => (
-                  <TableRow key={hour.id} className="border-b border-gray-700 hover:bg-gray-700">
-                    <TableCell className="text-white">{hour.date}</TableCell>
-                    <TableCell className="text-white">{hour.time}</TableCell>
-                    <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-gray-800 text-white border-gray-700">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Είστε σίγουροι;</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-400">
-                              Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Θα διαγράψει μόνιμα την ειδική ώρα.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Ακύρωση</AlertDialogCancel>
-                            <AlertDialogAction 
-                              className="bg-red-600 text-white hover:bg-red-700"
-                              onClick={() => deleteSpecialHour(hour.id!)}
-                            >
-                              Διαγραφή
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}

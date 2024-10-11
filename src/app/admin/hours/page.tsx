@@ -239,6 +239,28 @@ export default function WorkingHoursPage() {
     }
   }
 
+  const deleteSpecialHour = async (dateId: number) => {
+    const { error } = await supabase
+      .from('special_hours')
+      .delete()
+      .eq('id', dateId) // Assuming 'id' is the primary key for special_hours
+
+    if (error) {
+      console.error('Error deleting special hour:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete special hours. Please try again.",
+      })
+    } else {
+      toast({
+        title: "Success",
+        description: "Special hours deleted successfully.",
+      })
+      fetchSpecificDates() // Refresh the list after deletion
+    }
+  }
+
   return (
     <div className="space-y-8 p-6 bg-gray-900 min-h-screen text-white">
       <Card className="bg-gray-800 border-none shadow-lg">
@@ -408,6 +430,9 @@ export default function WorkingHoursPage() {
                       Ανοιχτά {date.start_time.slice(0, 5)} - {date.end_time.slice(0, 5)}
                     </span>
                   )}
+                  <Button onClick={() => deleteSpecialHour(date.id)} className="text-red-400">
+                    Διαγραφή
+                  </Button>
                 </div>
               ))
             )}
