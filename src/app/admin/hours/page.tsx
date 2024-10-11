@@ -452,7 +452,7 @@ export default function WorkingHoursPage() {
             </SelectTrigger>
             <SelectContent className="bg-gray-800 text-white border-gray-700">
               {daysOfWeek.map(day => (
-                <SelectItem key={day} value={day} className="hover:bg-gray-700">{day}</SelectItem>
+                <SelectItem key={day} value={day} className="hover:bg-gray-700">{translateDay(day)}</SelectItem> // Use translateDay for Greek
               ))}
             </SelectContent>
           </Select>
