@@ -72,7 +72,7 @@ export default function BookingsPage() {
       case 'pending': return 'text-yellow-500'
       case 'done': return 'text-green-500'
       case 'cancelled': return 'text-red-500'
-      default: return 'text-gray-500'
+      default: return 'text-gray-400'
     }
   }
 
@@ -85,31 +85,31 @@ export default function BookingsPage() {
   }: any) => (
     <div className="flex items-center justify-between px-2 py-2">
       <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1">
-        <ChevronLeft className="h-6 w-6 text-gray-600" />
+        <ChevronLeft className="h-6 w-6 text-gray-400" />
       </button>
-      <span className="text-lg font-bold text-gray-700">
+      <span className="text-lg font-bold text-gray-200">
         {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
       </span>
       <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1">
-        <ChevronRight className="h-6 w-6 text-gray-600" />
+        <ChevronRight className="h-6 w-6 text-gray-400" />
       </button>
     </div>
   )
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-900">
         <div className="text-orange-500 text-2xl">Φόρτωση κρατήσεων...</div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-900 min-h-screen">
       <div className="mb-8">
-        <Card className="bg-white shadow-lg border-none">
-          <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
-            <CardTitle className="text-2xl font-bold flex items-center justify-center">
+        <Card className="bg-gray-800 border-none shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500">
+            <CardTitle className="text-2xl font-bold text-white flex items-center justify-center">
               <Calendar className="mr-2" />
               Επιλογή Ημερομηνίας
             </CardTitle>
@@ -117,20 +117,16 @@ export default function BookingsPage() {
           <CardContent className="p-4">
             <DatePicker
               selected={selectedDate}
-              onChange={(date: Date | null) => {
-                  if (date) {
-                      setSelectedDate(date);
-                  }
-              }}
+              onChange={(date: Date) => setSelectedDate(date)}
               dateFormat="dd/MM/yyyy"
               renderCustomHeader={CustomDatePickerHeader}
               inline
-              calendarClassName="bg-white border-none shadow-md rounded-lg"
+              calendarClassName="bg-gray-800 border-none shadow-md rounded-lg text-white"
               dayClassName={date =>
                 date.getDate() === selectedDate.getDate() &&
                 date.getMonth() === selectedDate.getMonth()
                   ? "bg-orange-500 text-white rounded-full"
-                  : "text-gray-700 hover:bg-orange-100 rounded-full"
+                  : "text-gray-300 hover:bg-gray-700 rounded-full"
               }
               wrapperClassName="w-full"
             />
@@ -138,7 +134,7 @@ export default function BookingsPage() {
         </Card>
       </div>
 
-      <Card className="bg-white border-none shadow-lg">
+      <Card className="bg-gray-800 border-none shadow-lg">
         <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500">
           <CardTitle className="text-2xl font-bold text-white flex items-center">
             <Calendar className="mr-2" />
@@ -149,7 +145,7 @@ export default function BookingsPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-100">
+                <TableRow className="bg-gray-700 border-b border-gray-600">
                   <TableHead className="text-orange-500">Ώρα</TableHead>
                   <TableHead className="text-orange-500">Υπηρεσία</TableHead>
                   <TableHead className="text-orange-500">Πελάτης</TableHead>
@@ -159,16 +155,16 @@ export default function BookingsPage() {
               </TableHeader>
               <TableBody>
                 {bookings.map((booking) => (
-                  <TableRow key={booking.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <TableCell className="text-gray-800">
+                  <TableRow key={booking.id} className="border-b border-gray-700 hover:bg-gray-700">
+                    <TableCell className="text-white">
                       <Clock className="inline mr-2 text-orange-500" />
                       {booking.time.slice(0, 5)}
                     </TableCell>
-                    <TableCell className="text-gray-800">
+                    <TableCell className="text-white">
                       <Scissors className="inline mr-2 text-orange-500" />
                       {booking.service}
                     </TableCell>
-                    <TableCell className="text-gray-800">
+                    <TableCell className="text-white">
                       <User className="inline mr-2 text-orange-500" />
                       {booking.fullname}
                     </TableCell>
@@ -184,13 +180,13 @@ export default function BookingsPage() {
                           value={booking.status}
                           onValueChange={(value) => updateBookingStatus(booking.id!, value)}
                         >
-                          <SelectTrigger className="w-[180px] bg-white text-gray-800 border-gray-300">
+                          <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
                             <SelectValue placeholder="Ενημέρωση κατάστασης" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white text-gray-800 border-gray-300">
-                            <SelectItem value="pending" className="hover:bg-gray-100">Εκκρεμεί</SelectItem>
-                            <SelectItem value="done" className="hover:bg-gray-100">Ολοκληρώθηκε</SelectItem>
-                            <SelectItem value="cancelled" className="hover:bg-gray-100">Ακυρώθηκε</SelectItem>
+                          <SelectContent className="bg-gray-800 text-white border-gray-700">
+                            <SelectItem value="pending" className="hover:bg-gray-700">Εκκρεμεί</SelectItem>
+                            <SelectItem value="done" className="hover:bg-gray-700">Ολοκληρώθηκε</SelectItem>
+                            <SelectItem value="cancelled" className="hover:bg-gray-700">Ακυρώθηκε</SelectItem>
                           </SelectContent>
                         </Select>
                         <AlertDialog>
@@ -199,15 +195,15 @@ export default function BookingsPage() {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-white text-gray-800 border-gray-300">
+                          <AlertDialogContent className="bg-gray-800 text-white border-gray-700">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Είστε σίγουροι;</AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-600">
+                              <AlertDialogDescription className="text-gray-400">
                                 Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Θα διαγράψει μόνιμα την κράτηση.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-gray-200 text-gray-800 hover:bg-gray-300">Ακύρωση</AlertDialogCancel>
+                              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Ακύρωση</AlertDialogCancel>
                               <AlertDialogAction 
                                 className="bg-red-600 text-white hover:bg-red-700"
                                 onClick={() => deleteBooking(booking.id!)}
