@@ -85,10 +85,11 @@ export default function ProtectedAdminDashboard() {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     
-    const today = new Date();
-    const options = { timeZone: 'Europe/Athens', year: 'numeric' as const, month: '2-digit' as const, day: '2-digit' as const };
-    const localDate = new Intl.DateTimeFormat('en-GR', options).format(today);
-    
+    // ... existing code ...
+
+    // Change this line to use UTC date
+    const localDate = new Date().toISOString().split('T')[0]; // Get today's date in UTC format
+
     console.log('Fetching bookings for date:', localDate); // Log the date being used
 
     const { count: total } = await supabase
