@@ -6,65 +6,37 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from '@/utils/supabase'
 import { Booking } from '@/app/types/bookings'
-import { Calendar, Clock, Scissors, User, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, Scissors, User, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Trash2 } from 'lucide-react'
-import DatePicker from 'react-datepicker' // Use default import for DatePicker
-import 'react-datepicker/dist/react-datepicker.css' // Import the CSS for the date picker
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // State for selected date
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 
   useEffect(() => {
-    fetchBookings()
-  }, [])
+    fetchBookingsForSelectedDate(selectedDate)
+  }, [selectedDate])
 
-  const fetchBookings = async () => {
+  const fetchBookingsForSelectedDate = async (date: Date) => {
     setIsLoading(true)
-    const today = new Date();
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + 2); // Get the date for two days from today
-
+    const formattedDate = date.toISOString().split('T')[0]
     const { data, error } = await supabase
       .from('bookings')
       .select('*')
-      .order('date', { ascending: true })
+      .eq('date', formattedDate)
+      .order('time')
 
     if (error) {
       console.error('Σφάλμα κατά τη λήψη των κρατήσεων:', error)
     } else {
-      // Filter bookings for today and the next two days
-      const filteredBookings = (data || []).filter((booking) => {
-        const bookingDate = new Date(booking.date);
-        return bookingDate >= today && bookingDate <= endDate;
-      });
-      setBookings(filteredBookings);
+      setBookings(data || [])
     }
     setIsLoading(false)
-  }
-
-  const handleDateChange = (date: Date | null, event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
-    setSelectedDate(date?.toISOString().split('T')[0] || '');
-    // Fetch bookings for the selected date
-    fetchBookingsForSelectedDate(date?.toISOString().split('T')[0] || '');
-  }
-
-  const fetchBookingsForSelectedDate = async (date: string) => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('date', date); // Fetch bookings for the selected date
-
-    if (error) {
-      console.error('Σφάλμα κατά τη λήψη των κρατήσεων:', error);
-    } else {
-      setBookings(data || []);
-    }
-    setIsLoading(false);
   }
 
   const updateBookingStatus = async (id: number, newStatus: string) => {
@@ -104,6 +76,26 @@ export default function BookingsPage() {
     }
   }
 
+  const CustomDatePickerHeader = ({
+    date,
+    decreaseMonth,
+    increaseMonth,
+    prevMonthButtonDisabled,
+    nextMonthButtonDisabled,
+  }: any) => (
+    <div className="flex items-center justify-between px-2 py-2">
+      <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1">
+        <ChevronLeft className="h-6 w-6 text-gray-600" />
+      </button>
+      <span className="text-lg font-bold text-gray-700">
+        {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
+      </span>
+      <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1">
+        <ChevronRight className="h-6 w-6 text-gray-600" />
+      </button>
+    </div>
+  )
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -113,25 +105,51 @@ export default function BookingsPage() {
   }
 
   return (
-    <>
-      <DatePicker 
-        selected={new Date(selectedDate)} // Convert string to Date
-        onChange={handleDateChange} 
-        className="mb-4" // Add styling as needed
-      />
-      <Card className="bg-gray-900 border-none shadow-lg">
-        <CardHeader>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="mb-8">
+        <Card className="bg-white shadow-lg border-none">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+            <CardTitle className="text-2xl font-bold flex items-center justify-center">
+              <Calendar className="mr-2" />
+              Επιλογή Ημερομηνίας
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date: Date | null) => {
+                  if (date) {
+                      setSelectedDate(date);
+                  }
+              }}
+              dateFormat="dd/MM/yyyy"
+              renderCustomHeader={CustomDatePickerHeader}
+              inline
+              calendarClassName="bg-white border-none shadow-md rounded-lg"
+              dayClassName={date =>
+                date.getDate() === selectedDate.getDate() &&
+                date.getMonth() === selectedDate.getMonth()
+                  ? "bg-orange-500 text-white rounded-full"
+                  : "text-gray-700 hover:bg-orange-100 rounded-full"
+              }
+              wrapperClassName="w-full"
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="bg-white border-none shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500">
           <CardTitle className="text-2xl font-bold text-white flex items-center">
-            <Calendar className="mr-2 text-orange-500" />
-            Διαχείριση Κρατήσεων
+            <Calendar className="mr-2" />
+            Διαχείριση Κρατήσεων - {selectedDate.toLocaleDateString('el-GR')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-800 border-b border-gray-700">
-                  <TableHead className="text-orange-500">Ημερομηνία</TableHead>
+                <TableRow className="bg-gray-100">
                   <TableHead className="text-orange-500">Ώρα</TableHead>
                   <TableHead className="text-orange-500">Υπηρεσία</TableHead>
                   <TableHead className="text-orange-500">Πελάτης</TableHead>
@@ -141,20 +159,16 @@ export default function BookingsPage() {
               </TableHeader>
               <TableBody>
                 {bookings.map((booking) => (
-                  <TableRow key={booking.id} className="border-b border-gray-800 hover:bg-gray-800">
-                    <TableCell className="text-white">
-                      <Calendar className="inline mr-2 text-orange-500" />
-                      {new Date(booking.date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-white">
+                  <TableRow key={booking.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <TableCell className="text-gray-800">
                       <Clock className="inline mr-2 text-orange-500" />
-                      {booking.time.slice(0, 5)} {/* Αφαιρεί τα δευτερόλεπτα */}
+                      {booking.time.slice(0, 5)}
                     </TableCell>
-                    <TableCell className="text-white">
+                    <TableCell className="text-gray-800">
                       <Scissors className="inline mr-2 text-orange-500" />
                       {booking.service}
                     </TableCell>
-                    <TableCell className="text-white">
+                    <TableCell className="text-gray-800">
                       <User className="inline mr-2 text-orange-500" />
                       {booking.fullname}
                     </TableCell>
@@ -170,13 +184,13 @@ export default function BookingsPage() {
                           value={booking.status}
                           onValueChange={(value) => updateBookingStatus(booking.id!, value)}
                         >
-                          <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
+                          <SelectTrigger className="w-[180px] bg-white text-gray-800 border-gray-300">
                             <SelectValue placeholder="Ενημέρωση κατάστασης" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 text-white border-gray-700">
-                            <SelectItem value="pending" className="hover:bg-gray-700">Εκκρεμεί</SelectItem>
-                            <SelectItem value="done" className="hover:bg-gray-700">Ολοκληρώθηκε</SelectItem>
-                            <SelectItem value="cancelled" className="hover:bg-gray-700">Ακυρώθηκε</SelectItem>
+                          <SelectContent className="bg-white text-gray-800 border-gray-300">
+                            <SelectItem value="pending" className="hover:bg-gray-100">Εκκρεμεί</SelectItem>
+                            <SelectItem value="done" className="hover:bg-gray-100">Ολοκληρώθηκε</SelectItem>
+                            <SelectItem value="cancelled" className="hover:bg-gray-100">Ακυρώθηκε</SelectItem>
                           </SelectContent>
                         </Select>
                         <AlertDialog>
@@ -185,15 +199,15 @@ export default function BookingsPage() {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-gray-800 text-white border-gray-700">
+                          <AlertDialogContent className="bg-white text-gray-800 border-gray-300">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Είστε σίγουροι;</AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-400">
-                                Αυτή η ενέργεια δεν μπορεί να αναιρεθί. Θα διαγράψει μόνιμα την κράτηση.
+                              <AlertDialogDescription className="text-gray-600">
+                                Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Θα διαγράψει μόνιμα την κράτηση.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Ακύρωση</AlertDialogCancel>
+                              <AlertDialogCancel className="bg-gray-200 text-gray-800 hover:bg-gray-300">Ακύρωση</AlertDialogCancel>
                               <AlertDialogAction 
                                 className="bg-red-600 text-white hover:bg-red-700"
                                 onClick={() => deleteBooking(booking.id!)}
@@ -212,6 +226,6 @@ export default function BookingsPage() {
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   )
 }
