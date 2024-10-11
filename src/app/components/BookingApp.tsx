@@ -146,8 +146,8 @@ export default function BookingApp() {
 
     // Filter out the slots that fall within the break times
     const breakTimes = breaks.map(b => ({
-        startTime: parse(b.start_time, 'HH:mm', new Date()),
-        endTime: parse(b.end_time, 'HH:mm', new Date())
+        startTime: parse(b.start_time, 'HH:mm:ss', new Date()), // Corrected format
+        endTime: parse(b.end_time, 'HH:mm:ss', new Date()) // Corrected format
     }));
 
     // Log the break times for debugging
