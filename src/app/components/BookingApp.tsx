@@ -108,26 +108,26 @@ export default function BookingApp() {
   }
 
   const fetchAvailableTimes = async (date: Date) => {
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
-    const dateString = format(date, 'yyyy-MM-dd')
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Adjust Sunday from 0 to 7
+    const dateString = format(date, 'yyyy-MM-dd');
 
     // Check if it's a special day
-    const specialDay = specialHours.find(sh => sh.date === dateString)
+    const specialDay = specialHours.find(sh => sh.date === dateString);
     if (specialDay) {
-      if (specialDay.start_time === '00:00' && specialDay.end_time === '00:00') {
-        setAvailableTimes([]) // Shop is closed
-        return
-      }
-      // Use special hours
-      await generateTimeSlots(specialDay.start_time, specialDay.end_time, date)
+        if (specialDay.start_time === '00:00' && specialDay.end_time === '00:00') {
+            setAvailableTimes([]); // Shop is closed
+            return;
+        }
+        // Use special hours
+        await generateTimeSlots(specialDay.start_time, specialDay.end_time, date);
     } else {
-      // Use regular working hours
-      const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
-      if (workingDay) {
-        await generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
-      } else {
-        setAvailableTimes([]) // Shop is closed
-      }
+        // Use regular working hours
+        const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek);
+        if (workingDay) {
+            await generateTimeSlots(workingDay.start_time, workingDay.end_time, date);
+        } else {
+            setAvailableTimes([]); // Shop is closed
+        }
     }
 
     // New code to check for breaks based on the current day
@@ -149,9 +149,9 @@ export default function BookingApp() {
 
     setAvailableTimes(prevSlots => prevSlots.filter(slot => {
         const slotTime = parse(slot, 'HH:mm', new Date());
-        return !breakTimes.some(b => 
-            (isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime)) || 
+        return !breakTimes.some(b => (
             isEqual(slotTime, b.startTime) // Exclude the exact start time
+        ) && !isEqual(slotTime, b.endTime) // Exclude the exact end time
         );
     }));
   }
