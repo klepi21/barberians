@@ -129,6 +129,28 @@ export default function BookingApp() {
         setAvailableTimes([]) // Shop is closed
       }
     }
+
+    // New code to check for breaks based on the current day
+    const { data: breaks, error } = await supabase
+        .from('breaks') // Assuming your table is named 'breaks'
+        .select('*')
+        .eq('day_of_week', dayOfWeek);
+
+    if (error) {
+        console.error('Error fetching breaks:', error);
+        return;
+    }
+
+    // Filter out the slots that fall within the break times
+    const breakTimes = breaks.map(b => ({
+        startTime: parse(b.start_time, 'HH:mm', new Date()),
+        endTime: parse(b.end_time, 'HH:mm', new Date())
+    }));
+
+    setAvailableTimes(prevSlots => prevSlots.filter(slot => {
+        const slotTime = parse(slot, 'HH:mm', new Date());
+        return !breakTimes.some(b => isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime));
+    }));
   }
 
   const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
