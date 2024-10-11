@@ -142,7 +142,7 @@ export default function BookingApp() {
     }
 
     // Log the fetched breaks
-    console.log('Fetched breaks:', breaks);
+    // console.log('Fetched breaks:', breaks);
 
     // Filter out the slots that fall within the break times
     const breakTimes = breaks.map(b => ({
@@ -151,7 +151,7 @@ export default function BookingApp() {
     }));
 
     // Log the break times for debugging
-    console.log('Break times:', breakTimes);
+    // console.log('Break times:', breakTimes);
 
     setAvailableTimes(prevSlots => prevSlots.filter(slot => {
         const slotTime = parse(slot, 'HH:mm', new Date());
@@ -161,14 +161,14 @@ export default function BookingApp() {
         ));
 
         // Log the slot being checked against break times
-        console.log(`Checking slot: ${slot} against breaks:`, breakTimes);
+        // console.log(`Checking slot: ${slot} against breaks:`, breakTimes);
 
         return !isInBreak; // Exclude slots that fall within break times
     }));
   }
 
   const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
-    console.log('Generating time slots for:', format(date, 'yyyy-MM-dd'))
+    // console.log('Generating time slots for:', format(date, 'yyyy-MM-dd'))
     const start = parse(startTime, 'HH:mm:ss', date)
     const end = parse(endTime, 'HH:mm:ss', date)
     const slots: string[] = []
@@ -184,7 +184,7 @@ export default function BookingApp() {
       current = addMinutes(current, 30) // 30-minute intervals
     }
 
-    console.log('All possible slots:', slots)
+    // console.log('All possible slots:', slots)
 
     // Fetch bookings for the selected date
     const { data: bookings, error } = await supabase
@@ -197,7 +197,7 @@ export default function BookingApp() {
       return
     }
 
-    console.log('Fetched bookings:', bookings)
+    // console.log('Fetched bookings:', bookings)
 
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {
@@ -220,7 +220,7 @@ export default function BookingApp() {
       return isAvailable
     })
 
-    console.log('Available slots:', availableSlots)
+    // console.log('Available slots:', availableSlots)
     setAvailableTimes(availableSlots)
   }
 
@@ -316,21 +316,21 @@ export default function BookingApp() {
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Booking submission started');
+    // console.log('Booking submission started');
 
     if (!validateEmail(bookingDetails.email) || !validatePhoneNumber(bookingDetails.phoneNumber)) {
-      console.log('Validation failed');
+      // console.log('Validation failed');
       return;
     }
 
     if (!selectedDate || !selectedTime || selectedServices.length === 0) {
-      console.log('Required fields are missing');
+      // console.log('Required fields are missing');
       return;
     }
 
     const correctAnswer = mathChallenge.num1 + mathChallenge.num2;
     if (parseInt(mathChallenge.answer) !== correctAnswer) {
-      console.log('Math challenge failed');
+      // console.log('Math challenge failed');
       toast({
         variant: "destructive",
         title: "Error",
@@ -342,7 +342,7 @@ export default function BookingApp() {
     setIsLoading(true);
     
     try {
-      console.log('Checking if user exists');
+      // console.log('Checking if user exists');
       // First, check if the user exists
       const { data: existingUser, error: userError } = await supabase
         .from('users')
@@ -383,7 +383,7 @@ export default function BookingApp() {
         userId = newUser.id
       }
 
-      console.log('Creating booking');
+      // console.log('Creating booking');
       const { error: bookingError } = await supabase
         .from('bookings')
         .insert([
@@ -402,7 +402,7 @@ export default function BookingApp() {
 
       if (bookingError) throw bookingError;
 
-      console.log('Booking created successfully');
+      // console.log('Booking created successfully');
       setIsBookingDialogOpen(false);
       setIsSuccessDialogOpen(true);
       toast({
