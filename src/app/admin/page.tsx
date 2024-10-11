@@ -88,6 +88,8 @@ export default function ProtectedAdminDashboard() {
     const today = new Date();
     const options = { timeZone: 'Europe/Athens', year: 'numeric' as const, month: '2-digit' as const, day: '2-digit' as const };
     const localDate = new Intl.DateTimeFormat('en-GR', options).format(today);
+    
+    console.log('Fetching bookings for date:', localDate); // Log the date being used
 
     const { count: total } = await supabase
       .from('bookings')
@@ -98,6 +100,8 @@ export default function ProtectedAdminDashboard() {
       .select('*')
       .eq('date', localDate)
       .order('time');
+
+    console.log('Fetched today\'s bookings:', todayData); // Log the fetched data
 
     if (error) {
       console.error('Error fetching bookings:', error);
