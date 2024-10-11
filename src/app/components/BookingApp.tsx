@@ -149,7 +149,10 @@ export default function BookingApp() {
 
     setAvailableTimes(prevSlots => prevSlots.filter(slot => {
         const slotTime = parse(slot, 'HH:mm', new Date());
-        return !breakTimes.some(b => isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime));
+        return !breakTimes.some(b => 
+            (isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime)) || 
+            isEqual(slotTime, b.startTime) // Exclude the exact start time
+        );
     }));
   }
 
