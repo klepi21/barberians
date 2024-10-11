@@ -117,7 +117,11 @@ export default function BookingsPage() {
           <CardContent className="p-4">
             <DatePicker
               selected={selectedDate}
-              onChange={(date: Date) => setSelectedDate(date)}
+              onChange={(date: Date | null) => {
+                  if (date) {
+                      setSelectedDate(date);
+                  }
+              }}
               dateFormat="dd/MM/yyyy"
               renderCustomHeader={CustomDatePickerHeader}
               inline
