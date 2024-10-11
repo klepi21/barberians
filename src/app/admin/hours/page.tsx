@@ -431,18 +431,32 @@ export default function WorkingHoursPage() {
               ))}
             </SelectContent>
           </Select>
-          <Input
-            type="time"
+          <Select
             value={newBreak.start}
-            onChange={(e) => setNewBreak(prev => ({ ...prev, start: e.target.value }))}
-            placeholder="Ώρα έναρξης"
-          />
-          <Input
-            type="time"
+            onValueChange={(value) => setNewBreak(prev => ({ ...prev, start: value }))}
+          >
+            <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
+              <SelectValue placeholder="Ώρα έναρξης" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 text-white border-gray-700">
+              {timeSlots.map(time => (
+                <SelectItem key={time} value={time} className="hover:bg-gray-700">{time}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
             value={newBreak.end}
-            onChange={(e) => setNewBreak(prev => ({ ...prev, end: e.target.value }))}
-            placeholder="Ώρα λήξης"
-          />
+            onValueChange={(value) => setNewBreak(prev => ({ ...prev, end: value }))}
+          >
+            <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
+              <SelectValue placeholder="Ώρα λήξης" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 text-white border-gray-700">
+              {timeSlots.map(time => (
+                <SelectItem key={time} value={time} className="hover:bg-gray-700">{time}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={addBreak} className="bg-orange-500 hover:bg-orange-600 text-white">
             Προσθήκη Διαλείμματος
           </Button>
