@@ -38,6 +38,7 @@ export default function WorkingHoursPage() {
       [day]: [] // Initialize with empty breaks
     }), {})
   )
+  const [newBreak, setNewBreak] = useState<{ day: string, start: string, end: string }>({ day: 'Monday', start: '', end: '' })
   const { toast } = useToast()
 
   useEffect(() => {
@@ -183,6 +184,58 @@ export default function WorkingHoursPage() {
       setSpecificDate(undefined)
       setSpecificHours({ isOpen: true, start: '09:00', end: '17:00' })
       fetchSpecificDates()
+    }
+  }
+
+  const addBreak = async () => {
+    const { error } = await supabase
+      .from('breaks') // Assuming the table name is 'breaks'
+      .insert({
+        day_of_week: daysOfWeek.indexOf(newBreak.day) + 1,
+        start_time: newBreak.start,
+        end_time: newBreak.end
+      })
+
+    if (error) {
+      console.error('Error adding break:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add break. Please try again.",
+      })
+    } else {
+      // Update local state to reflect the new break
+      setBreaks(prev => ({
+        ...prev,
+        [newBreak.day]: [...prev[newBreak.day], { start: newBreak.start, end: newBreak.end }]
+      }))
+      toast({
+        title: "Success",
+        description: "Break added successfully.",
+      })
+      setNewBreak({ day: 'Monday', start: '', end: '' }) // Reset form
+    }
+  }
+
+  const clearBreaks = async (day: string) => {
+    const { error } = await supabase
+      .from('breaks')
+      .delete()
+      .eq('day_of_week', daysOfWeek.indexOf(day) + 1)
+
+    if (error) {
+      console.error('Error clearing breaks:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to clear breaks. Please try again.",
+      })
+    } else {
+      setBreaks(prev => ({ ...prev, [day]: [] })) // Clear local state
+      toast({
+        title: "Success",
+        description: "Breaks cleared successfully.",
+      })
     }
   }
 
@@ -361,6 +414,60 @@ export default function WorkingHoursPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-8 border-t border-gray-700 pt-4">
+        <h3 className="text-xl font-semibold mb-4">Διαλείμματα</h3>
+        <div className="flex items-center space-x-4 mb-4">
+          <Select
+            value={newBreak.day}
+            onValueChange={(value) => setNewBreak(prev => ({ ...prev, day: value }))}
+          >
+            <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
+              <SelectValue placeholder="Επιλέξτε ημέρα" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 text-white border-gray-700">
+              {daysOfWeek.map(day => (
+                <SelectItem key={day} value={day} className="hover:bg-gray-700">{day}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            type="time"
+            value={newBreak.start}
+            onChange={(e) => setNewBreak(prev => ({ ...prev, start: e.target.value }))}
+            placeholder="Ώρα έναρξης"
+          />
+          <Input
+            type="time"
+            value={newBreak.end}
+            onChange={(e) => setNewBreak(prev => ({ ...prev, end: e.target.value }))}
+            placeholder="Ώρα λήξης"
+          />
+          <Button onClick={addBreak} className="bg-orange-500 hover:bg-orange-600 text-white">
+            Προσθήκη Διαλείμματος
+          </Button>
+        </div>
+
+        {daysOfWeek.map(day => (
+          <div key={day} className="flex items-center space-x-4 mb-2">
+            <span className="w-24 text-white">{translateDay(day)}:</span>
+            {breaks[day].length > 0 ? (
+              <>
+                {breaks[day].map((breakItem, index) => (
+                  <span key={index} className="text-green-400">
+                    {breakItem.start} - {breakItem.end}
+                  </span>
+                ))}
+                <Button onClick={() => clearBreaks(day)} className="text-red-400">
+                  Διαγραφή Διαλειμμάτων
+                </Button>
+              </>
+            ) : (
+              <span className="text-red-400">Δεν υπάρχουν διαλείμματα</span>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
