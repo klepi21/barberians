@@ -27,6 +27,8 @@ const HARDCODED_SERVICES: Service[] = [
   { name: 'Ξύρισμα', price: 13, duration: 30 },
   { name: 'Γενειάδα', price: 5, duration: 30 },
   { name: 'Καθαρισμός Αυχένα', price: 5, duration: 30 },
+  { name: 'Κούρεμα Ανδρικό με περιποίηση γενειάδας', price: 15, duration: 30 },
+  { name: 'Κούρεμα Ανδρικό Shaver με περιποίηση γενειάδας', price: 16, duration: 30 },
 ]   
 
 export default function BookingApp() {
@@ -225,25 +227,7 @@ export default function BookingApp() {
   }
 
   const toggleService = (serviceName: string) => {
-    setSelectedServices(prev => {
-      const newServices = prev.includes(serviceName)
-        ? prev.filter(s => s !== serviceName)
-        : [...prev, serviceName]
-
-      // Handle special combinations
-      if (newServices.includes('Ανδρικό') && newServices.includes('Γενειάδα')) {
-        return ['Ανδρικό', 'Γενειάδα']
-      }
-      if (newServices.includes('Shaver') && newServices.includes('Γενειάδα')) {
-        return ['Shaver', 'Γενειάδα']
-      }
-      if ((newServices.includes('Shaver') || newServices.includes('Ανδρικό')) && newServices.includes('Ξύρισμα')) {
-        return newServices.filter(s => s === 'Shaver' || s === 'Ανδρικό' || s === 'Ξύρισμα').slice(0, 2)
-      }
-
-      // Limit to maximum of 2 services
-      return newServices.slice(0, 2)
-    })
+    setSelectedServices([serviceName]); // Allow only one service to be selected
   }
 
   const calculateTotalPrice = () => {
@@ -633,7 +617,7 @@ export default function BookingApp() {
             {selectedDate && (
               <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '340px' }}>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-gray-400">ΩΡΑ</h3>
+                  <h3 className="text-sm font-bold text-gray-400">Διαθέσιμες Ώρες</h3>
                   <div className="flex space-x-2">
                     <Button
                       variant="ghost"
@@ -706,7 +690,7 @@ export default function BookingApp() {
                         onCheckedChange={() => toggleService(service.name)}
                         className="bg-black data-[state=checked]:bg-orange-400"
                       />
-                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white pointer-events-none" />
+                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-black pointer-events-none" />
                     </div>
                   </div>
                 ))}
