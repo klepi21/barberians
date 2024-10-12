@@ -21,11 +21,11 @@ import profile from '@/images/profile.jpg'
 import cover from '@/images/cover.jpg'
 
 const HARDCODED_SERVICES: Service[] = [
-  { name: 'Ανδρικό', price: 13, duration: 30 },
-  { name: 'Shaver', price: 15, duration: 30 },
-  { name: 'Παιδικό', price: 10, duration: 30 },
+  { name: 'Ανδρικό κούρεμα απλό', price: 13, duration: 30 },
+  { name: 'Ανδρικό κούρεμα Shaver', price: 15, duration: 30 },
+  { name: 'Κούρεμα παιδικό', price: 10, duration: 30 },
   { name: 'Ξύρισμα', price: 13, duration: 30 },
-  { name: 'Γενειάδα', price: 5, duration: 30 },
+  { name: 'Περιποίηση Γενειάδας', price: 5, duration: 30 },
   { name: 'Καθαρισμός Αυχένα', price: 5, duration: 30 },
   { name: 'Κούρεμα Ανδρικό με περιποίηση γενειάδας', price: 15, duration: 30 },
   { name: 'Κούρεμα Ανδρικό Shaver με περιποίηση γενειάδας', price: 16, duration: 30 },
