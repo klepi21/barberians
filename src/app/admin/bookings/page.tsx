@@ -174,7 +174,7 @@ export default function BookingsPage() {
                       {booking.fullname}
                     </TableCell>
                     <TableCell className="text-white">
-                      {booking.phonenumber} // Assuming the field is named 'phoneNumber'
+                      {booking.phonenumber} 
                     </TableCell>
                     <TableCell className={`font-semibold ${getStatusColor(booking.status)}`}>
                       <AlertCircle className="inline mr-2" />
