@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 import { supabase } from '@/utils/supabase'
-import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle } from 'lucide-react'
+import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle, Phone } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,6 +18,7 @@ type Booking = {
   service: string
   fullname: string
   status: string
+  phonenumber: string  // Updated to match the database field
 }
 
 const PIN = '1234'  // Replace with your desired PIN
@@ -98,7 +99,7 @@ export default function ProtectedAdminDashboard() {
 
     const { data: todayData, error } = await supabase
       .from('bookings')
-      .select('*')
+      .select('*')  // Ensure phonenumber is included in the fetched data
       .eq('date', localDate)
       .order('time');
 
@@ -179,9 +180,13 @@ export default function ProtectedAdminDashboard() {
                         <Clock className="text-orange-400 mr-2" />
                         <p className="text-gray-300">{booking.time.split(':').slice(0, 2).join(':')}</p>
                       </div>
-                      <div className="flex items-center">
+                      <div className="flex items-center mb-2">
                         <PlusCircle className="text-orange-400 mr-2" />
                         <p className="text-gray-300">{booking.service}</p>
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <Phone className="text-orange-400 mr-2" />  
+                        <a href={`tel:${booking.phonenumber}`} className="text-gray-300">{booking.phonenumber}</a>  
                       </div>
                       <Select
                         value={booking.status}
