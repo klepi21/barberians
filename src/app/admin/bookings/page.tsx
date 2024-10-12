@@ -27,7 +27,7 @@ export default function BookingsPage() {
     const formattedDate = date.toISOString().split('T')[0]
     const { data, error } = await supabase
       .from('bookings')
-      .select('*')
+      .select('*') // Ensure phone number is included in the bookings table
       .eq('date', formattedDate)
       .order('time')
 
@@ -153,6 +153,7 @@ export default function BookingsPage() {
                   <TableHead className="text-orange-500">Ώρα</TableHead>
                   <TableHead className="text-orange-500">Υπηρεσία</TableHead>
                   <TableHead className="text-orange-500">Πελάτης</TableHead>
+                  <TableHead className="text-orange-500">Τηλέφωνο</TableHead>
                   <TableHead className="text-orange-500">Κατάσταση</TableHead>
                   <TableHead className="text-orange-500">Ενέργειες</TableHead>
                 </TableRow>
@@ -171,6 +172,9 @@ export default function BookingsPage() {
                     <TableCell className="text-white">
                       <User className="inline mr-2 text-orange-500" />
                       {booking.fullname}
+                    </TableCell>
+                    <TableCell className="text-white">
+                      {booking.phonenumber} // Assuming the field is named 'phoneNumber'
                     </TableCell>
                     <TableCell className={`font-semibold ${getStatusColor(booking.status)}`}>
                       <AlertCircle className="inline mr-2" />
