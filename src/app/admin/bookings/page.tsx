@@ -24,11 +24,21 @@ export default function BookingsPage() {
 
   const fetchBookingsForSelectedDate = async (date: Date) => {
     setIsLoading(true)
-    const formattedDate = date.toISOString().split('T')[0]
+    // Get the start and end of the day in local timezone
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    
+    // Convert to UTC for the database query
+    const startOfDayUTC = new Date(startOfDay.getTime() - startOfDay.getTimezoneOffset() * 60000).toISOString();
+    const endOfDayUTC = new Date(endOfDay.getTime() - endOfDay.getTimezoneOffset() * 60000).toISOString();
+
+    console.log(`Fetching bookings for date range: ${startOfDayUTC} to ${endOfDayUTC}`);
+
     const { data, error } = await supabase
       .from('bookings')
       .select('*') // Ensure phone number is included in the bookings table
-      .eq('date', formattedDate)
+      .gte('date', startOfDayUTC.split('T')[0]) // Start of the day
+      .lte('date', endOfDayUTC.split('T')[0]) // End of the day
       .order('time')
 
     if (error) {
