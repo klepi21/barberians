@@ -188,32 +188,67 @@ export default function WorkingHoursPage() {
   }
 
   const addBreak = async () => {
-    const { error } = await supabase
-      .from('breaks') // Assuming the table name is 'breaks'
-      .insert({
-        day_of_week: daysOfWeek.indexOf(newBreak.day) + 1,
-        start_time: newBreak.start,
-        end_time: newBreak.end
-      })
+    const existingBreaks = await supabase
+      .from('breaks')
+      .select('*')
+      .eq('day_of_week', daysOfWeek.indexOf(newBreak.day) + 1);
 
-    if (error) {
-      console.error('Error adding break:', error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add break. Please try again.",
-      })
+    if (existingBreaks.data && existingBreaks.data.length > 0) {
+      // If a break already exists for the day, update it
+      const { error } = await supabase
+        .from('breaks')
+        .update({
+          start_time: newBreak.start,
+          end_time: newBreak.end
+        })
+        .eq('day_of_week', daysOfWeek.indexOf(newBreak.day) + 1);
+
+      if (error) {
+        console.error('Error updating break:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update break. Please try again.",
+        });
+      } else {
+        // Update local state to reflect the new break
+        setBreaks(prev => ({
+          ...prev,
+          [newBreak.day]: [{ start: newBreak.start, end: newBreak.end }] // Overwrite existing breaks
+        }));
+        toast({
+          title: "Success",
+          description: "Break updated successfully.",
+        });
+      }
     } else {
-      // Update local state to reflect the new break
-      setBreaks(prev => ({
-        ...prev,
-        [newBreak.day]: [...prev[newBreak.day], { start: newBreak.start, end: newBreak.end }]
-      }))
-      toast({
-        title: "Success",
-        description: "Break added successfully.",
-      })
-      setNewBreak({ day: 'Monday', start: '', end: '' }) // Reset form
+      // If no existing break, insert a new one
+      const { error } = await supabase
+        .from('breaks')
+        .insert({
+          day_of_week: daysOfWeek.indexOf(newBreak.day) + 1,
+          start_time: newBreak.start,
+          end_time: newBreak.end
+        });
+
+      if (error) {
+        console.error('Error adding break:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add break. Please try again.",
+        });
+      } else {
+        // Update local state to reflect the new break
+        setBreaks(prev => ({
+          ...prev,
+          [newBreak.day]: [...prev[newBreak.day], { start: newBreak.start, end: newBreak.end }]
+        }));
+        toast({
+          title: "Success",
+          description: "Break added successfully.",
+        });
+      }
     }
   }
 
