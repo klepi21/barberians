@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from '@/utils/supabase'
 import { Service, Booking, WorkingHours, SpecialHours } from '@/app/types/bookings'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -31,9 +32,13 @@ const HARDCODED_SERVICES: Service[] = [
   { name: 'Κούρεμα Ανδρικό Shaver με περιποίηση γενειάδας', price: 16, duration: 30 },
 ]   
 
+const BARBERS = ['Κώστας']
+
 export default function BookingApp() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedBarber, setSelectedBarber] = useState<string | null>(null)
+  const [availableBarbers, setAvailableBarbers] = useState<string[]>(BARBERS)
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
@@ -83,6 +88,12 @@ export default function BookingApp() {
     }
   }, [selectedDate])
 
+  useEffect(() => {
+    if (selectedDate && selectedTime) {
+      fetchAvailableBarbers(selectedDate, selectedTime)
+    }
+  }, [selectedDate, selectedTime])
+
   const fetchServices = async () => {
     setIsLoading(true)
     // Simulate an API call
@@ -110,83 +121,69 @@ export default function BookingApp() {
   }
 
   const fetchAvailableTimes = async (date: Date) => {
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Adjust Sunday from 0 to 7
-    const dateString = format(date, 'yyyy-MM-dd');
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay()
+    const dateString = format(date, 'yyyy-MM-dd')
 
     // Check if it's a special day
-    const specialDay = specialHours.find(sh => sh.date === dateString);
+    const specialDay = specialHours.find(sh => sh.date === dateString)
     if (specialDay) {
-        if (specialDay.start_time === '00:00' && specialDay.end_time === '00:00') {
-            setAvailableTimes([]); // Shop is closed
-            return;
-        }
-        // Use special hours
-        await generateTimeSlots(specialDay.start_time, specialDay.end_time, date);
+      if (specialDay.start_time === '00:00' && specialDay.end_time === '00:00') {
+        setAvailableTimes([])
+        return
+      }
+      // Use special hours
+      await generateTimeSlots(specialDay.start_time, specialDay.end_time, date)
     } else {
-        // Use regular working hours
-        const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek);
-        if (workingDay) {
-            await generateTimeSlots(workingDay.start_time, workingDay.end_time, date);
-        } else {
-            setAvailableTimes([]); // Shop is closed
-        }
+      // Use regular working hours
+      const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
+      if (workingDay) {
+        await generateTimeSlots(workingDay.start_time, workingDay.end_time, date)
+      } else {
+        setAvailableTimes([])
+      }
     }
 
-    // New code to check for breaks based on the current day
+    // Fetch breaks
     const { data: breaks, error } = await supabase
-        .from('breaks') // Assuming your table is named 'breaks'
-        .select('*')
-        .eq('day_of_week', dayOfWeek);
+      .from('breaks')
+      .select('*')
+      .eq('day_of_week', dayOfWeek)
 
     if (error) {
-        console.error('Error fetching breaks:', error);
-        return;
+      console.error('Error fetching breaks:', error)
+      return
     }
 
-    // Log the fetched breaks
-    // console.log('Fetched breaks:', breaks);
-
-    // Filter out the slots that fall within the break times
+    // Filter out break times
     const breakTimes = breaks.map(b => ({
-        startTime: parse(b.start_time, 'HH:mm:ss', new Date()), // Corrected format
-        endTime: parse(b.end_time, 'HH:mm:ss', new Date()) // Corrected format
-    }));
-
-    // Log the break times for debugging
-    // console.log('Break times:', breakTimes);
+      startTime: parse(b.start_time, 'HH:mm:ss', new Date()),
+      endTime: parse(b.end_time, 'HH:mm:ss', new Date())
+    }))
 
     setAvailableTimes(prevSlots => prevSlots.filter(slot => {
-        const slotTime = parse(slot, 'HH:mm', new Date());
-        const isInBreak = breakTimes.some(b => (
-            isEqual(slotTime, b.startTime) || isEqual(slotTime, b.endTime) || 
-            (isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime))
-        ));
-
-        // Log the slot being checked against break times
-        // console.log(`Checking slot: ${slot} against breaks:`, breakTimes);
-
-        return !isInBreak; // Exclude slots that fall within break times
-    }));
+      const slotTime = parse(slot, 'HH:mm', new Date())
+      const isInBreak = breakTimes.some(b => (
+        isEqual(slotTime, b.startTime) || isEqual(slotTime, b.endTime) || 
+        (isAfter(slotTime, b.startTime) && isBefore(slotTime, b.endTime))
+      ))
+      return !isInBreak
+    }))
   }
 
   const generateTimeSlots = async (startTime: string, endTime: string, date: Date) => {
-    // console.log('Generating time slots for:', format(date, 'yyyy-MM-dd'))
     const start = parse(startTime, 'HH:mm:ss', date)
     const end = parse(endTime, 'HH:mm:ss', date)
     const slots: string[] = []
 
     let current = start
     while (isBefore(current, end)) {
-      // Check if the current time slot is in the past for today's date
       if (isSameDay(date, new Date()) && isBefore(current, new Date())) {
         current = addMinutes(current, 30)
         continue
       }
       slots.push(format(current, 'HH:mm'))
-      current = addMinutes(current, 30) // 30-minute intervals
+      current = addMinutes(current, 30)
     }
-
-    // console.log('All possible slots:', slots)
 
     // Fetch bookings for the selected date
     const { data: bookings, error } = await supabase
@@ -199,64 +196,52 @@ export default function BookingApp() {
       return
     }
 
-    // console.log('Fetched bookings:', bookings)
-
-    // Filter out booked slots
+    // Filter out fully booked slots
     const availableSlots = slots.filter(slot => {
       const slotStart = parse(slot, 'HH:mm', date)
-      const isAvailable = !bookings.some(booking => {
+      const bookedBarbers = bookings.filter(booking => {
         const bookingStart = parse(booking.time, 'HH:mm:ss', date)
-        const bookingEnd = addMinutes(bookingStart, booking.duration || 45)
-        
-        // Check if the slot start time is exactly at the booking start time
-        const overlap = isEqual(slotStart, bookingStart)
-        
-        if (overlap) {
-          console.log(`Slot ${slot} overlaps with booking:`, booking)
-        }
-        return overlap
-      })
-      if (!isAvailable) {
-        console.log(`Slot ${slot} is not available`)
-      }
-      return isAvailable
+        return isEqual(slotStart, bookingStart)
+      }).map(booking => booking.barber)
+
+      return bookedBarbers.length < BARBERS.length
     })
 
-    // console.log('Available slots:', availableSlots)
     setAvailableTimes(availableSlots)
   }
 
+  const fetchAvailableBarbers = async (date: Date, time: string) => {
+    const dateString = format(date, 'yyyy-MM-dd')
+    const { data: bookings, error } = await supabase
+      .from('bookings')
+      .select('barber')
+      .eq('date', dateString)
+      .eq('time', time)
+
+    if (error) {
+      console.error('Error fetching bookings for barber availability:', error)
+      return
+    }
+
+    const bookedBarbers = bookings.map(booking => booking.barber)
+    const availableBarbers = BARBERS.filter(barber => !bookedBarbers.includes(barber))
+    setAvailableBarbers(availableBarbers)
+    setSelectedBarber(null) // Reset selected barber when changing time
+  }
+
   const toggleService = (serviceName: string) => {
-    setSelectedServices([serviceName]); // Allow only one service to be selected
+    setSelectedServices([serviceName]) // Allow only one service to be selected
   }
 
   const calculateTotalPrice = () => {
     if (selectedServices.length === 0) return 0
-
-    // Check for special combinations first
-    if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Γενειάδα')) {
-      return 15
-    }
-    if (selectedServices.includes('Shaver') && selectedServices.includes('Γενειάδα')) {
-      return 16
-    }
-    if (selectedServices.includes('Shaver') && selectedServices.includes('Ξύρισμα')) {
-      return 28
-    }
-    if (selectedServices.includes('Ανδρικό') && selectedServices.includes('Ξύρισμα')) {
-      return 26
-    }
-
-    // If no special combination, calculate the sum
-    return selectedServices.reduce((total, serviceName) => {
-      const service = services.find(s => s.name === serviceName)
-      return total + (service ? service.price : 0)
-    }, 0)
+    const service = services.find(s => s.name === selectedServices[0])
+    return service ? service.price : 0
   }
 
   const calculateEndTime = (startTime: string) => {
     const [hours, minutes] = startTime.split(':').map(Number)
-    const duration = 30 // All combinations result in 30 minutes total
+    const duration = 30 // All services are 30 minutes
     const endDate = new Date(2022, 0, 1, hours, minutes + duration)
     return endDate.toTimeString().slice(0, 5)
   }
@@ -299,36 +284,30 @@ export default function BookingApp() {
   }
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // console.log('Booking submission started');
+    e.preventDefault()
 
     if (!validateEmail(bookingDetails.email) || !validatePhoneNumber(bookingDetails.phoneNumber)) {
-      // console.log('Validation failed');
-      return;
+      return
     }
 
-    if (!selectedDate || !selectedTime || selectedServices.length === 0) {
-      // console.log('Required fields are missing');
-      return;
+    if (!selectedDate || !selectedTime || selectedServices.length === 0 || !selectedBarber) {
+      return
     }
 
-    const correctAnswer = mathChallenge.num1 + mathChallenge.num2;
+    const correctAnswer = mathChallenge.num1 + mathChallenge.num2
     if (parseInt(mathChallenge.answer) !== correctAnswer) {
-      // console.log('Math challenge failed');
       toast({
         variant: "destructive",
         title: "Error",
         description: "Incorrect answer to the math challenge. Please try again.",
-      });
-      return;
+      })
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
     
     try {
-      // console.log('Checking if user exists');
-      // First, check if the user exists
-      const { data: existingUser, error: userError } = await supabase
+      const { data: existingUser, error: userError  } = await supabase
         .from('users')
         .select('id, booking_count')
         .eq('email', bookingDetails.email)
@@ -341,7 +320,6 @@ export default function BookingApp() {
       let userId: number
 
       if (existingUser) {
-        // User exists, update their booking count
         const { error: updateError } = await supabase
           .from('users')
           .update({ booking_count: (existingUser.booking_count || 0) + 1 })
@@ -350,11 +328,10 @@ export default function BookingApp() {
         if (updateError) throw updateError
         userId = existingUser.id
       } else {
-        // User doesn't exist, create a new user
         const { data: newUser, error: insertError } = await supabase
           .from('users')
           .insert({
-            full_name:  bookingDetails.fullName,
+            full_name: bookingDetails.fullName,
             email: bookingDetails.email,
             telephone: bookingDetails.phoneNumber,
             booking_count: 1
@@ -367,34 +344,32 @@ export default function BookingApp() {
         userId = newUser.id
       }
 
-      // console.log('Creating booking');
       const { error: bookingError } = await supabase
         .from('bookings')
         .insert([
           {
             date: format(selectedDate, 'yyyy-MM-dd'),
             time: selectedTime,
-            service: selectedServices.join(', '),
+            service: selectedServices[0],
             fullname: bookingDetails.fullName,
             phonenumber: bookingDetails.phoneNumber,
             email: bookingDetails.email,
             status: 'pending',
-            user_id: userId
-            // Removed the 'duration' field
+            user_id: userId,
+            barber: selectedBarber
           }
-        ]);
+        ])
 
-      if (bookingError) throw bookingError;
+      if (bookingError) throw bookingError
 
-      // console.log('Booking created successfully');
-      setIsBookingDialogOpen(false);
-      setIsSuccessDialogOpen(true);
+      setIsBookingDialogOpen(false)
+      setIsSuccessDialogOpen(true)
       toast({
         title: "Success",
         description: "Your booking has been created successfully.",
-      });
+      })
 
-      // Send confirmation email via your API
+      // Send confirmation email
       const response = await fetch('/api/sendEmail', {
         method: 'POST',
         headers: {
@@ -405,35 +380,35 @@ export default function BookingApp() {
           bookingDetails: {
             date: format(selectedDate, 'dd-MM-yyyy'),
             time: selectedTime,
-            services: selectedServices.join(', '), // Join services into a string
-            fullName: bookingDetails.fullName, // Include full name
-            phoneNumber: bookingDetails.phoneNumber, // Include phone number
+            services: selectedServices[0],
+            fullName: bookingDetails.fullName,
+            phoneNumber: bookingDetails.phoneNumber,
+            barber: selectedBarber
           },
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
       if (!response.ok) {
-        console.error('Error sending email:', data.error);
+        console.error('Error sending email:', data.error)
         toast({
           variant: "destructive",
           title: "Error",
           description: "Failed to send confirmation email. Please try again.",
-        });
-        return;
+        })
+        return
       }
 
-      // Refresh available times after successful booking
-      fetchAvailableTimes(selectedDate);
+      fetchAvailableTimes(selectedDate)
     } catch (error) {
-      console.error('Error creating booking:', error);
+      console.error('Error creating booking:', error)
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to create booking. Please try again.",
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -448,6 +423,7 @@ export default function BookingApp() {
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     setSelectedTime(null)
+    setSelectedBarber(null)
   }
 
   const isDateDisabled = (date: Date) => {
@@ -456,7 +432,7 @@ export default function BookingApp() {
     if (specialDay) {
       return specialDay.start_time === '00:00' && specialDay.end_time === '00:00'
     }
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // Adjust Sunday from 0 to 7
+    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay()
     const workingDay = workingHours.find(wh => wh.day_of_week === dayOfWeek)
     return date < today || !workingDay
   }
@@ -525,12 +501,10 @@ export default function BookingApp() {
               <h1 className="text-xl font-bold">BARBERIANS CUTS ON THE ROCKS</h1>
               <div className="flex items-center">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                {/* <span className="ml-1">4.8 (114)</span> */}
                 <span className="ml-2 text-orange-400">Μπαρμπέρης</span>
               </div>
             </div>
             <div className="flex space-x-1">
-              
               <a href="tel:2316010977" className="p-2">
                 <Phone className="w-6 h-6" />
               </a>
@@ -662,6 +636,24 @@ export default function BookingApp() {
               </div>
             )}
 
+            {selectedTime && (
+              <div className="mb-6">
+                <h3 className="text-sm text-gray-400 mb-2">Επιλογή Μπαρμπέρη</h3>
+                <Select onValueChange={setSelectedBarber} value={selectedBarber || undefined}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Επιλέξτε μπαρμπέρη" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableBarbers.map((barber) => (
+                      <SelectItem key={barber} value={barber}>
+                        {barber}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="mb-6">
               <h3 className="text-sm text-gray-400 mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
               <div className="flex flex-wrap gap-2">
@@ -681,7 +673,6 @@ export default function BookingApp() {
                           className="ml-1"
                         />
                       )}
-                      
                     </label>
                     <div className="relative">
                       <Switch
@@ -706,6 +697,12 @@ export default function BookingApp() {
                   {selectedTime && `${selectedTime} - ${calculateEndTime(selectedTime)}`}
                 </span>
               </div>
+              {selectedBarber && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-black font-semibold">Μπαρμπέρης:</span>
+                  <span className="text-black">{selectedBarber}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center mb-4">
                 <span className="text-black font-semibold">Σύνολο:</span>
                 <span className="text-black font-semibold">{calculateTotalPrice()}€</span>
@@ -716,7 +713,7 @@ export default function BookingApp() {
               <Button 
                 className="w-full bg-black text-white hover:bg-gray-800" 
                 onClick={handleBookNow}
-                disabled={!selectedDate || !selectedTime || selectedServices.length === 0 || isLoading}
+                disabled={!selectedDate || !selectedTime || !selectedBarber || selectedServices.length === 0 || isLoading}
               >
                 {isLoading ? 'Παρακαλώ περιμένετε...'  : 'Κράτηση Τώρα'}
               </Button>
@@ -753,6 +750,7 @@ export default function BookingApp() {
                     <div className="text-sm text-gray-400">
                       <p>{new Date(booking.date).toLocaleDateString('el-GR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                       <p>{booking.time}</p>
+                      <p>Μπαρμπέρης: {booking.barber}</p>
                     </div>
                   </div>
                 ))}
@@ -834,6 +832,10 @@ export default function BookingApp() {
               <div className="flex items-center">
                 <Scissors className="mr-2 h-4 w-4 text-gray-400" />
                 <span>{selectedServices.join(', ')}</span>
+              </div>
+              <div className="flex items-center">
+                <User className="mr-2 h-4 w-4 text-gray-400" />
+                <span>Μπαρμπέρης: {selectedBarber}</span>
               </div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
                 <span className="font-semibold">Σύνολο:</span>

@@ -88,8 +88,8 @@ export default function ProtectedAdminDashboard() {
     
     // ... existing code ...
 
-    // Change this line to use local date
-    const localDate = new Date().toLocaleDateString('en-CA'); // Get today's date in local format (YYYY-MM-DD)
+    // Change this line to use UTC date
+    const localDate = new Date().toISOString().split('T')[0]; // Get today's date in UTC format
 
     console.log('Fetching bookings for date:', localDate); // Log the date being used
 

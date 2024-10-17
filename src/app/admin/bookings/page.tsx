@@ -164,8 +164,11 @@ export default function BookingsPage() {
                   <TableHead className="text-orange-500">Υπηρεσία</TableHead>
                   <TableHead className="text-orange-500">Πελάτης</TableHead>
                   <TableHead className="text-orange-500">Τηλέφωνο</TableHead>
+                  <TableHead className="text-orange-500">Μπαρμπέρης</TableHead> 
                   <TableHead className="text-orange-500">Κατάσταση</TableHead>
+                  
                   <TableHead className="text-orange-500">Ενέργειες</TableHead>
+                  
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -185,6 +188,9 @@ export default function BookingsPage() {
                     </TableCell>
                     <TableCell className="text-white">
                       {booking.phonenumber} 
+                    </TableCell>
+                    <TableCell className="text-white">
+                      {booking.barber || "Κώστας"} 
                     </TableCell>
                     <TableCell className={`font-semibold ${getStatusColor(booking.status)}`}>
                       <AlertCircle className="inline mr-2" />
@@ -233,6 +239,7 @@ export default function BookingsPage() {
                         </AlertDialog>
                       </div>
                     </TableCell>
+                    
                   </TableRow>
                 ))}
               </TableBody>

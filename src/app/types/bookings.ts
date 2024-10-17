@@ -8,6 +8,7 @@ export interface Booking {
     email: string;
     fullname: string;
     phonenumber: string;
+    barber: string;
   }
   
   export interface Service {
