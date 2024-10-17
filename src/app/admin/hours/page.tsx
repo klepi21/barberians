@@ -44,6 +44,7 @@ export default function WorkingHoursPage() {
   useEffect(() => {
     fetchWorkingHours()
     fetchSpecificDates()
+    fetchBreaks()
   }, [])
 
   const fetchWorkingHours = async () => {
@@ -295,6 +296,22 @@ export default function WorkingHoursPage() {
       fetchSpecificDates() // Refresh the list after deletion
     }
   }
+
+  const fetchBreaks = async () => {
+    const { data, error } = await supabase
+      .from('breaks')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching breaks:', error);
+    } else {
+      const breaksObj = daysOfWeek.reduce((acc, day) => {
+        acc[day] = data.filter(b => b.day_of_week === daysOfWeek.indexOf(day) + 1);
+        return acc;
+      }, {} as Record<string, { start: string, end: string }[]>);
+      setBreaks(breaksObj); // Update state with fetched breaks
+    }
+  };
 
   return (
     <div className="space-y-8 p-6 bg-gray-900 min-h-screen text-white">
