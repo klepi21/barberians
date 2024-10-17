@@ -305,13 +305,28 @@ export default function WorkingHoursPage() {
     if (error) {
       console.error('Error fetching breaks:', error);
     } else {
+      // Initialize breaks object
       const breaksObj = daysOfWeek.reduce((acc, day) => {
-        acc[day] = data.filter(b => b.day_of_week === daysOfWeek.indexOf(day) + 1);
+        acc[day] = []; // Start with empty array for each day
         return acc;
       }, {} as Record<string, { start: string, end: string }[]>);
+
+      // Populate breaks object with fetched data
+      data.forEach(b => {
+        const dayIndex = b.day_of_week - 1; // Adjust for zero-based index
+        const dayName = daysOfWeek[dayIndex];
+        if (dayName) {
+          breaksObj[dayName].push({ start: b.start_time, end: b.end_time });
+        }
+      });
+
       setBreaks(breaksObj); // Update state with fetched breaks
     }
   };
+
+  useEffect(() => {
+    fetchBreaks();
+  }, []);
 
   return (
     <div className="space-y-8 p-6 bg-gray-900 min-h-screen text-white">
