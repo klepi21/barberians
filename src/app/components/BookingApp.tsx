@@ -589,7 +589,7 @@ export default function BookingApp() {
             </div>
 
             {selectedDate && (
-              <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '340px' }}>
+              <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '400px' }}>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-bold text-gray-400">Διαθέσιμες Ώρες</h3>
                   <div className="flex space-x-2">
@@ -609,20 +609,12 @@ export default function BookingApp() {
                     </Button>
                   </div>
                 </div>
-                <div 
-                  ref={timeRef}
-                  className="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide"
-                  style={{
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                    WebkitOverflowScrolling: 'touch'
-                  }}
-                >
+                <div className="grid grid-cols-6 gap-2 overflow-hidden">
                   {availableTimes.map((time) => (
                     <Button
                       key={time}
                       variant={selectedTime === time ? "secondary" : "ghost"}
-                      className={`flex-shrink-0 w-16 h-10 font-bold ${
+                      className={`flex-shrink-0 h-10 font-bold ${
                         selectedTime === time
                           ? 'bg-white text-black hover:bg-gray-200'
                           : 'hover:bg-gray-800'
