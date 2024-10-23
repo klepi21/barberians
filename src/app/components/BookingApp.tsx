@@ -589,7 +589,7 @@ export default function BookingApp() {
             </div>
 
             {selectedDate && (
-              <div className="mb-6 glass-effect rounded-xl p-4 " style={{ width: '400px' }}>
+              <div className="mb-6 glass-effect rounded-xl p-4" style={{ width: '370px' }}> {/* Fixed width for consistency */}
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-bold text-gray-400">Διαθέσιμες Ώρες</h3>
                   <div className="flex space-x-2">
