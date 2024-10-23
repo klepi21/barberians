@@ -632,7 +632,7 @@ export default function BookingApp() {
               <div className="mb-6">
                 <h3 className="text-sm text-gray-400 mb-2">Επιλογή Μπαρμπέρη</h3>
                 <Select onValueChange={setSelectedBarber} value={selectedBarber || undefined}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-32"> {/* Adjusted width here */}
                     <SelectValue placeholder="Επιλέξτε μπαρμπέρη" />
                   </SelectTrigger>
                   <SelectContent>
