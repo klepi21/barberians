@@ -76,3 +76,16 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.glow-effect {
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px rgba(251,146,60,0.5);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(251,146,60,0.8);
+  }
+}

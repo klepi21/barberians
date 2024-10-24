@@ -226,7 +226,13 @@ export default function BookingApp() {
     const bookedBarbers = bookings.map(booking => booking.barber)
     const availableBarbers = BARBERS.filter(barber => !bookedBarbers.includes(barber))
     setAvailableBarbers(availableBarbers)
-    setSelectedBarber(null) // Reset selected barber when changing time
+    
+    // Set the first available barber as the default selection
+    if (availableBarbers.length > 0) {
+      setSelectedBarber(availableBarbers[0]) // Set the first barber as default
+    } else {
+      setSelectedBarber(null) // Reset if no barbers are available
+    }
   }
 
   const toggleService = (serviceName: string) => {
@@ -501,7 +507,7 @@ export default function BookingApp() {
               <h1 className="text-xl font-bold">BARBERIANS CUTS ON THE ROCKS</h1>
               <div className="flex items-center">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="ml-2 text-orange-400">Μπαρμπέρης</span>
+                <span className="ml-2 text-[#E9570D]">Μπαρμπέρης</span>
               </div>
             </div>
             <div className="flex space-x-1">
@@ -520,20 +526,20 @@ export default function BookingApp() {
         <TabsList className="grid w-full grid-cols-2 bg-gray-900 p-1 rounded-xl mb-4">
           <TabsTrigger 
             value="booking" 
-            className="rounded-lg py-2 px-4 data-[state=active]:bg-orange-400 data-[state=active]:text-black transition-all duration-200"
+            className="rounded-lg py-2 px-4 data-[state=active]:bg-[#E9570D] data-[state=active]:text-black transition-all duration-200 data-[state=active]:shadow-[0_0_10px_rgba(251,146,60,0.5)] data-[state=active]:glow-effect"
           >
             Κράτηση
           </TabsTrigger>
           <TabsTrigger 
             value="my-bookings" 
-            className="rounded-lg py-2 px-4 data-[state=active]:bg-orange-400 data-[state=active]:text-black transition-all duration-200"
+            className="rounded-lg py-2 px-4 data-[state=active]:bg-[#E9570D] data-[state=active]:text-black transition-all duration-200 data-[state=active]:shadow-[0_0_10px_rgba(251,146,60,0.5)] data-[state=active]:glow-effect"
           >
             Οι Κρατήσεις μου
           </TabsTrigger>
         </TabsList>
         <TabsContent value="booking" className="mt-0">
           <div className="p-4">
-            <div className="mb-2 glass-effect rounded-xl p-4">
+            <div className="mb-2 glass-effect rounded-xl p-4 border-1.3 border-[#E9570D] bg-[#101115]"> {/* Added background color */}
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">{greekMonths[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
                 <div className="flex space-x-2">
@@ -556,7 +562,7 @@ export default function BookingApp() {
               </div>
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {greekDays.map(day => (
-                  <div key={day} className="text-center text-sm font-bold text-gray-400">{day}</div>
+                  <div key={day} className="text-center text-sm font-bold text-[#E9570D]">{day}</div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1 overflow-hidden">
@@ -573,7 +579,7 @@ export default function BookingApp() {
                       variant={isSelected ? "secondary" : "ghost"}
                       className={`h-10 font-bold ${
                         isSelected
-                          ? 'bg-white text-black hover:bg-gray-200'
+                          ? 'bg-[#E9570D] text-black hover:bg-[#E9570D] shadow-[0_0_10px_rgba(251,146,60,0.5)] animate-pulse'
                           : isDisabled
                           ? 'opacity-50 cursor-not-allowed'
                           : 'hover:bg-gray-800'
@@ -589,35 +595,33 @@ export default function BookingApp() {
             </div>
 
             {selectedDate && (
-              <div className="mb-6 glass-effect rounded-xl p-4" style={{ width: '370px' }}> {/* Fixed width for consistency */}
+              <div className="mb-6 glass-effect rounded-xl p-4 bg-[#101115] w-full"> {/* Updated background and full width */}
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-gray-400">Διαθέσιμες Ώρες</h3>
+                  <h3 className="text-l font-bold">Διαθέσιμες Ώρες</h3>
                   <div className="flex space-x-2">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => scroll(-100)}
                     >
-                      <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => scroll(100)}
                     >
-                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-6 gap-2 overflow-hidden">
+                <div className="grid grid-cols-4 gap-2 overflow-hidden">
                   {availableTimes.map((time) => (
                     <Button
                       key={time}
                       variant={selectedTime === time ? "secondary" : "ghost"}
-                      className={`flex-shrink-0 h-10 font-bold ${
+                      className={`flex-shrink-0 h-10 font-bold rounded-lg border border-gray-600 ${
                         selectedTime === time
-                          ? 'bg-white text-black hover:bg-gray-200'
-                          : 'hover:bg-gray-800'
+                          ? 'bg-[#E9570D] text-black hover:bg-[#E9570D]'
+                          : 'bg-[#1a1d20] hover:bg-gray-800' // Darker background for unselected time slots
                       }`}
                       onClick={() => setSelectedTime(time)}
                     >
@@ -629,16 +633,17 @@ export default function BookingApp() {
             )}
 
             {selectedTime && (
-              <div className="mb-6">
-                <h3 className="text-sm text-gray-400 mb-2">Επιλογή Μπαρμπέρη</h3>
-                <Select onValueChange={setSelectedBarber} value={selectedBarber || undefined}>
-                  <SelectTrigger className="w-32"> {/* Adjusted width here */}
+              <div className="mb-6 glass-effect rounded-xl p-4 bg-[#101115] w-full">
+                <h3 className="text-md font-bold mb-2">Επιλογή Μπαρμπέρη</h3>
+                <Select onValueChange={setSelectedBarber} value={selectedBarber || undefined}> {/* Removed className from Select */}
+                  <SelectTrigger className="bg-[#101115] rounded-lg w-full"> {/* Background and rounded corners */}
                     <SelectValue placeholder="Επιλέξτε μπαρμπέρη" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#101115] rounded-lg"> {/* Background for dropdown */}
                     {availableBarbers.map((barber) => (
-                      <SelectItem key={barber} value={barber}>
-                        {barber}
+                      <SelectItem key={barber} value={barber} className="flex items-center p-2 hover:bg-gray-800 rounded-lg"> {/* Adjusted layout */}
+                        <User className="mr-2 h-5 w-5 text-gray-400" /> {/* Man icon */}
+                        <span>{barber}</span> {/* Barber name in a span for better alignment */}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -646,14 +651,14 @@ export default function BookingApp() {
               </div>
             )}
 
-            <div className="mb-6">
+            <div className="mb-6 bg-[#101115] rounded-xl p-4"> {/* Updated background color */}
               <h3 className="text-sm text-gray-400 mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
               <div className="flex flex-wrap gap-2">
                 {services.map((service) => (
-                  <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-black border border-gray-800 rounded-lg p-2">
+                  <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-[#1a1d20] border border-gray-800 rounded-lg p-4"> {/* Lighter dark background and increased size */}
                     <label
                       htmlFor={service.name}
-                      className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+                      className="text-sm  leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
                     >
                       {service.name}
                       {service.name === 'Ξύρισμα' && (
@@ -671,16 +676,16 @@ export default function BookingApp() {
                         id={service.name}
                         checked={selectedServices.includes(service.name)}
                         onCheckedChange={() => toggleService(service.name)}
-                        className="bg-black data-[state=checked]:bg-orange-400"
+                        className="h-8 w-8 bg-gray-800 data-[state=checked]:bg-gray-800" // Dark background for the toggle
                       />
-                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-black pointer-events-none" />
+                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-4 w-4 text-orange-400 pointer-events-none" /> {/* Orange scissors */}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-orange-400 rounded-xl p-4 mb-6">
+            <div className="bg-[#E9570D] rounded-xl p-4 mb-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-black">
                   {selectedDate ? selectedDate.toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Επιλέξτε ημερομηνία'}
