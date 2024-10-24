@@ -652,7 +652,7 @@ export default function BookingApp() {
             )}
 
             <div className="mb-6 bg-[#101115] rounded-xl p-4"> {/* Updated background color */}
-              <h3 className="text-sm text-gray-400 mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
+              <h3 className="text-md font-bold mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
               <div className="flex flex-wrap gap-2">
                 {services.map((service) => (
                   <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-[#1a1d20] border border-gray-800 rounded-lg p-4"> {/* Lighter dark background and increased size */}
