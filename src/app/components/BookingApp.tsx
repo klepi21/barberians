@@ -930,7 +930,7 @@ export default function BookingApp() {
               />
             </div>
             <h2 className="text-2xl font-bold relative z-10">Ειδοποίηση</h2> {/* Bolder font */}
-            <p className="relative z-10 text-lg font-bold">Θα είμαστε κλειστά στις 7, 8 και 9 Νοεμβρίου.</p> {/* Bolder font */}
+            <p className="relative z-10 text-lg font-bold">Θα είμαστε κλειστά στις 6 , 7, 8 και 9 Νοεμβρίου.</p> {/* Bolder font */}
             <p className="relative z-10 text-lg font-bold">Κλείνει σε {countdown} δευτερόλεπτα...</p> {/* Bolder font */}
             <button onClick={handleClosePopup} className="absolute top-2 right-2 text-red-500 relative z-10">X</button>
           </div>
