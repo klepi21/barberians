@@ -323,7 +323,16 @@ export default function NewBookingPage() {
                 Υπηρεσίες
               </Label>
               <div className="space-y-2">
-                {['Ανδρικό', 'Shaver', 'Παιδικό', 'Ξύρισμα', 'Γενειάδα', 'Καθαρισμός Αυχένα'].map((service) => (
+              {[
+                'Ανδρικό κούρεμα απλό',
+                'Ανδρικό κούρεμα Shaver',
+                'Κούρεμα παιδικό',
+                'Ξύρισμα',
+                'Περιποίηση Γενειάδας',
+                'Καθαρισμός Αυχένα',
+                'Κούρεμα Ανδρικό με περιποίηση γενειάδας',
+                'Κούρεμα Ανδρικό Shaver με περιποίηση γενειάδας'
+              ].map((service) => (
                   <div key={service} className="flex items-center">
                     <Checkbox
                       id={service}
