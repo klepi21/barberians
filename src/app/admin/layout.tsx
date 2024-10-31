@@ -18,10 +18,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-black text-white">
       <nav className="bg-black p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-orange-500">BARBERIANS Διαχείριση</h1>
+          <h1 className="text-2xl font-bold text-orange-500">BARBERIANS</h1>
           <div className="hidden md:flex space-x-4">
             {menuItems.map((item) => (
               <Button key={item.href} asChild variant="ghost" className="text-white hover:text-orange-500 hover:bg-gray-800 font-bold">

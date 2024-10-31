@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 import { supabase } from '@/utils/supabase'
-import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle, Phone } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { Calendar, Clock, PlusCircle, Settings, User, Bell, CheckCircle, Phone, TrendingUp, DollarSign, Users, BarChart3 } from 'lucide-react'
+import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
+import { el } from 'date-fns/locale'
 import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 type Booking = {
   id: number
@@ -18,20 +20,40 @@ type Booking = {
   service: string
   fullname: string
   status: string
-  phonenumber: string  // Updated to match the database field
+  phonenumber: string
 }
 
-const PIN = '1234'  // Replace with your desired PIN
+const SERVICE_NAME_MAP: { [key: string]: string } = {
+  'Ανδρικό': 'Ανδρικό κούρεμα απλό',
+  'Shaver': 'Ανδρικό κούρεμα Shaver',
+  // Add more mappings here if needed
+}
+
+const SERVICES_PRICING: { [key: string]: number } = {
+  'Ανδρικό κούρεμα απλό': 13,
+  'Ανδρικό κούρεμα Shaver': 15,
+  'Κούρεμα παιδικό': 10,
+  'Ξύρισμα': 13,
+  'Περιποίηση Γενειάδας': 5,
+  'Καθαρισμός Αυχένα': 5,
+  'Κούρεμα Ανδρικό με περιποίηση γενειάδας': 15,
+  'Κούρεμα Ανδρικό Shaver με περιποίηση γενειάδας': 16,
+}
+
+const PIN = '1234'
 
 export default function ProtectedAdminDashboard() {
-  const [pinInput, setPinInput] = useState<string[]>([]);
+  const [pinInput, setPinInput] = useState<string[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showPinInput, setShowPinInput] = useState(true)
-
   const [totalBookings, setTotalBookings] = useState(0)
   const [todayBookings, setTodayBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [newBookings, setNewBookings] = useState<Booking[]>([])
+  const [monthlyEarnings, setMonthlyEarnings] = useState(0)
+  const [monthlyBookings, setMonthlyBookings] = useState<any[]>([])
+  const [topServices, setTopServices] = useState<{service: string, count: number}[]>([])
+  const [customerRetention, setCustomerRetention] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
@@ -46,13 +68,16 @@ export default function ProtectedAdminDashboard() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchDashboardData()
+      fetchMonthlyStats()
+      fetchTopServices()
+      calculateCustomerRetention()
       const subscription = supabase
         .channel('bookings')
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'bookings' },
           (payload) => {
-            handleNewBooking(payload.new as Booking);
+            handleNewBooking(payload.new as Booking)
           }
         )
         .subscribe()
@@ -63,59 +88,155 @@ export default function ProtectedAdminDashboard() {
     }
   }, [isAuthenticated])
 
+  const fetchMonthlyStats = async () => {
+    const startDate = startOfMonth(new Date())
+    const endDate = endOfMonth(new Date())
+    
+    const { data: monthBookings, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .gte('date', format(startDate, 'yyyy-MM-dd'))
+      .lte('date', format(endDate, 'yyyy-MM-dd'))
+      .eq('status', 'done')
+
+    if (error) {
+      console.error('Error fetching monthly stats:', error)
+      return
+    }
+
+    // Create an array of all days in the month
+    const allDays = eachDayOfInterval({ start: startDate, end: endDate })
+    
+    // Initialize data for all days
+    const dailyStats = allDays.reduce((acc: any, date) => {
+      const dateStr = format(date, 'yyyy-MM-dd')
+      acc[dateStr] = { 
+        date: dateStr,
+        earnings: 0, 
+        bookings: 0,
+        formattedDate: format(date, 'd MMM', { locale: el })
+      }
+      return acc
+    }, {})
+
+    // Fill in actual booking data
+    monthBookings.forEach(booking => {
+      const date = booking.date
+      if (dailyStats[date]) {
+        dailyStats[date].bookings += 1
+        dailyStats[date].earnings += SERVICES_PRICING[booking.service as keyof typeof SERVICES_PRICING] || 0
+      }
+    })
+
+    const chartData = Object.values(dailyStats)
+    setMonthlyBookings(chartData)
+    setMonthlyEarnings(chartData.reduce((sum: number, day: any) => sum + day.earnings, 0))
+  }
+
+  const fetchTopServices = async () => {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('service')
+      .eq('status', 'done')
+
+    if (error) {
+      console.error('Error fetching top services:', error)
+      return
+    }
+
+    const serviceCounts = data.reduce((acc: { [key: string]: number }, booking) => {
+      const mappedService = SERVICE_NAME_MAP[booking.service] || booking.service
+      acc[mappedService] = (acc[mappedService] || 0) + 1
+      return acc
+    }, {})
+
+    const sortedServices = Object.entries(serviceCounts)
+      .map(([service, count]) => ({ service, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    setTopServices(sortedServices)
+  }
+
+  const calculateCustomerRetention = async () => {
+    try {
+      // Get total unique customers
+      const { data: uniqueCustomers, error: uniqueError } = await supabase
+        .from('bookings')
+        .select('phonenumber')
+        .not('phonenumber', 'is', null)
+
+      if (uniqueError) throw uniqueError
+
+      // Get customers with multiple bookings
+      const { data: repeatCustomers, error: repeatError } = await supabase
+        .from('bookings')
+        .select('phonenumber')
+        .not('phonenumber', 'is', null)
+
+      if (repeatError) throw repeatError
+
+      // Count unique phone numbers
+      const uniquePhones = new Set(uniqueCustomers.map(b => b.phonenumber))
+      const repeatPhones = repeatCustomers.reduce((acc: { [key: string]: number }, booking) => {
+        acc[booking.phonenumber] = (acc[booking.phonenumber] || 0) + 1
+        return acc
+      }, {})
+
+      const repeatCount = Object.values(repeatPhones).filter(count => count > 1).length
+      const totalUnique = uniquePhones.size
+
+      const retentionRate = totalUnique > 0 ? (repeatCount / totalUnique) * 100 : 0
+      setCustomerRetention(Math.round(retentionRate))
+    } catch (error) {
+      console.error('Error calculating customer retention:', error)
+    }
+  }
+
   const handlePinButtonClick = (number: string) => {
     if (pinInput.length < 4) {
-      setPinInput(prev => [...prev, number]);
+      setPinInput(prev => [...prev, number])
     }
-  };
+  }
 
   const handlePinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const enteredPin = pinInput.join('');
+    e.preventDefault()
+    const enteredPin = pinInput.join('')
     if (enteredPin === PIN) {
       setIsAuthenticated(true)
       setShowPinInput(false)
       sessionStorage.setItem('adminAuthenticated', 'true')
       fetchDashboardData()
     } else {
-      alert('Incorrect PIN. Please try again.');
-      setPinInput([]);
+      alert('Λάθος PIN. Παρακαλώ προσπαθήστε ξανά.')
+      setPinInput([])
     }
-  };
+  }
 
   const fetchDashboardData = async () => {
-    setIsLoading(true);
-    
-    // ... existing code ...
-
-    // Change this line to use UTC date
-    const localDate = new Date().toISOString().split('T')[0]; // Get today's date in UTC format
-
-    console.log('Fetching bookings for date:', localDate); // Log the date being used
+    setIsLoading(true)
+    const localDate = new Date().toISOString().split('T')[0]
 
     const { count: total } = await supabase
       .from('bookings')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
 
     const { data: todayData, error } = await supabase
       .from('bookings')
-      .select('*')  // Ensure phonenumber is included in the fetched data
+      .select('*')
       .eq('date', localDate)
-      .order('time');
-
-    console.log('Fetched today\'s bookings:', todayData); // Log the fetched data
+      .order('time')
 
     if (error) {
-      console.error('Error fetching bookings:', error);
+      console.error('Error fetching bookings:', error)
     } else {
-      setTotalBookings(total || 0);
-      setTodayBookings(todayData as Booking[] || []);
+      setTotalBookings(total || 0)
+      setTodayBookings(todayData as Booking[] || [])
     }
-    setIsLoading(false);
+    setIsLoading(false)
   }
 
   const handleNewBooking = (newBooking: Booking) => {
-    console.log('Λήφθηκε νέα κράτηση:', newBooking)
     setNewBookings(prev => [...prev, newBooking])
     setTotalBookings(prev => prev + 1)
     if (newBooking.date === new Date().toISOString().split('T')[0]) {
@@ -130,109 +251,51 @@ export default function ProtectedAdminDashboard() {
 
   const playNotificationSound = () => {
     if (audioRef.current) {
-      audioRef.current.play().catch(error => console.error('Σφάλμα κατά την αναπαραγωγή ήχου:', error));
+      audioRef.current.play().catch(error => console.error('Error playing sound:', error))
     }
   }
 
   const handleUpdateBookingStatus = async (id: number, status: string) => {
-    // Update the booking status in the database
     await supabase
       .from('bookings')
       .update({ status })
-      .eq('id', id);
+      .eq('id', id)
     
-    // Fetch updated bookings
-    fetchDashboardData();
-  };
-
-  const renderCalendar = () => {
-    const bookingsByHour: { [key: string]: Booking[] } = {}
-
-    todayBookings.forEach(booking => {
-      if (booking.status === 'cancelled') return; // Skip cancelled bookings
-      const hour = booking.time.split(':')[0]
-      if (!bookingsByHour[hour]) {
-        bookingsByHour[hour] = []
-      }
-      bookingsByHour[hour].push(booking)
-    })
-
-    return (
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg shadow-2xl p-6 mt-8">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">Πρόγραμμα Σήμερα</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Object.entries(bookingsByHour).map(([hour, bookings]) => (
-            <Card key={hour} className="bg-gradient-to-br from-gray-800 to-gray-700 border-none shadow-lg overflow-hidden">
-              <CardContent className="p-0">
-                <div className="bg-orange-500 text-white text-xl font-semibold py-2 px-4">
-                  {hour}:00
-                </div>
-                <div className="p-4 space-y-3">
-                  {bookings.map((booking) => (
-                    <div key={booking.id} className="bg-gray-600 rounded-lg p-3 transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                      <div className="flex items-center mb-2">
-                        <User className="text-orange-400 mr-2" />
-                        <p className="text-white font-medium">{booking.fullname}</p>
-                        {booking.status === 'done' && <CheckCircle className="text-green-500 ml-2" />}
-                        {booking.status === 'pending' && <span className="text-yellow-500 ml-2">Pending</span>}
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <Clock className="text-orange-400 mr-2" />
-                        <p className="text-gray-300">{booking.time.split(':').slice(0, 2).join(':')}</p>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <PlusCircle className="text-orange-400 mr-2" />
-                        <p className="text-gray-300">{booking.service}</p>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <Phone className="text-orange-400 mr-2" />  
-                        <a href={`tel:${booking.phonenumber}`} className="text-gray-300">{booking.phonenumber}</a>  
-                      </div>
-                      <Select
-                        value={booking.status}
-                        onValueChange={(value) => handleUpdateBookingStatus(booking.id!, value)}
-                      >
-                        <SelectTrigger className="w-[180px] bg-gray-700 text-white border-gray-600">
-                          <SelectValue placeholder="Ενημέρωση κατάστασης" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 text-white border-gray-700">
-                          <SelectItem value="pending" className="hover:bg-gray-700">Εκκρεμεί</SelectItem>
-                          <SelectItem value="done" className="hover:bg-gray-700">Ολοκληρώθηκε</SelectItem>
-                          <SelectItem value="cancelled" className="hover:bg-gray-700">Ακυρώθηκε</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
+    fetchDashboardData()
+    fetchMonthlyStats()
   }
 
   if (showPinInput) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <Card className="w-full max-w-md bg-gray-800 border-none shadow-lg">
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <Card className="w-full max-w-md bg-black border border-orange-500/20 shadow-lg">
           <CardContent className="p-6">
-            <h1 className="text-2xl font-bold mb-6 text-white text-center">Admin Authentication</h1>
+            <h1 className="text-2xl font-bold mb-6 text-white text-center">Είσοδος Διαχειριστή</h1>
             <div className="mb-4 text-white text-center">
-              {pinInput.join(' ')}
+              {pinInput.map((_, i) => '•').join(' ')}
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                <Button key={num} onClick={() => handlePinButtonClick(num.toString())} className="bg-gray-700 text-white">
+                <Button 
+                  key={num} 
+                  onClick={() => handlePinButtonClick(num.toString())} 
+                  className="bg-black border border-orange-500/20 text-white hover:bg-orange-500/10"
+                >
                   {num}
                 </Button>
               ))}
-              <Button onClick={() => handlePinButtonClick('0')} className="bg-gray-700 text-white col-span-3">
+              <Button 
+                onClick={() => handlePinButtonClick('0')} 
+                className="bg-black border border-orange-500/20 text-white hover:bg-orange-500/10 col-span-3"
+              >
                 0
               </Button>
             </div>
-            <Button onClick={handlePinSubmit} className="w-full bg-orange-500 hover:bg-orange-600 text-white">
-              Submit
+            <Button 
+              onClick={handlePinSubmit} 
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Είσοδος
             </Button>
           </CardContent>
         </Card>
@@ -242,90 +305,197 @@ export default function ProtectedAdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="text-orange-500 text-2xl">Φόρτωση δεδομένων πίνακα ελέγχου...</div>
+      <div className="flex items-center justify-center h-screen bg-black">
+        <div className="text-orange-500 text-2xl">Φόρτωση δεδομένων...</div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 bg-gray-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-white">Πίνακας Ελέγχου Διαχειριστή</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gray-800 border-none shadow-lg">
+    <div className="p-6 bg-black min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 text-white">Πίνακας Ελέγχου</h1>
+      
+      {/* Stats Overview */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <Calendar className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Σύνολο Κρατήσεων</span>
+              <DollarSign className="text-orange-500 w-8 h-8" />
+              <span className="text-sm font-medium text-gray-400">Μηνιαία Έσοδα</span>
             </div>
-            <div className="text-4xl font-bold text-white mb-4">{totalBookings}</div>
-            <Button asChild variant="outline" className="w-full bg-gray-700 hover:bg-gray-600 text-white border-none">
-              <Link href="/admin/bookings">Προβολή Όλων των Κρατήσεων</Link>
-            </Button>
+            <div className="text-4xl font-bold text-white mb-2">{monthlyEarnings}€</div>
+            <div className="text-sm text-gray-500">Από ολοκληρωμένες κρατήσεις</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border-none shadow-lg">
+        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Calendar className="text-orange-500 w-8 h-8" />
+              <span className="text-sm font-medium text-gray-400">Συνολικές Κρατήσεις</span>
+            </div>
+            <div className="text-4xl font-bold text-white mb-2">{totalBookings}</div>
+            <div className="text-sm text-gray-500">Όλες οι κρατήσεις</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Users className="text-orange-500 w-8 h-8" />
+              <span className="text-sm font-medium text-gray-400">Διατήρηση Πελατών</span>
+            </div>
+            <div className="text-4xl font-bold text-white mb-2">{customerRetention}%</div>
+            <div className="text-sm text-gray-500">Επαναλαμβανόμενοι πελάτες</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Clock className="text-orange-500 w-8 h-8" />
               <span className="text-sm font-medium text-gray-400">Σημερινές Κρατήσεις</span>
             </div>
-            <div className="text-4xl font-bold text-white mb-4">{todayBookings.length}</div>
-            <Button asChild variant="outline" className="w-full bg-gray-700 hover:bg-gray-600 text-white border-none">
-              <Link href="/admin/bookings">Προβολή Σημερινών Κρατήσεων</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800 border-none shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <PlusCircle className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Νέα Κράτηση</span>
-            </div>
-            <div className="text-lg text-gray-300 mb-4">Δημιουργία νέας κράτησης γρήγορα</div>
-            <Button asChild variant="outline" className="w-full bg-orange-500 hover:bg-orange-600 text-white border-none">
-              <Link href="/admin/new-booking">Προσθήκη Νέας Κράτησης</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800 border-none shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Settings className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Διαχείριση Ωρών</span>
-            </div>
-            <div className="text-lg text-gray-300 mb-4">Ενημέρωση ωρών εργασίας</div>
-            <Button asChild variant="outline" className="w-full bg-gray-700 hover:bg-gray-600 text-white border-none">
-              <Link href="/admin/hours">Διαχείριση Ωρών Εργασίας</Link>
+            <div className="text-4xl font-bold text-white mb-2">{todayBookings.length}</div>
+            <Button 
+              asChild 
+              variant="outline" 
+              className="w-full bg-black border border-orange-500/20 text-white hover:bg-orange-500/10"
+            >
+              <Link href="/admin/bookings">Προβολή Προγράμματος</Link>
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {newBookings.length > 0 && (
-        <Card className="bg-orange-500 border-none shadow-lg mt-6">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Bell className="text-white w-8 h-8" />
-              <span className="text-sm font-medium text-white">Νέες Κρατήσεις</span>
+      {/* Flex Container for Monthly Revenue and Top Services */}
+      <div className="flex flex-col lg:flex-row gap-8 mb-8">
+        {/* Monthly Revenue Chart */}
+        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300 flex-1">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-white flex items-center">
+              <BarChart3 className="mr-2 text-orange-500" />
+              Μηνιαία Επισκόπηση Εσόδων
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyBookings}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+                  <XAxis 
+                    dataKey="formattedDate" 
+                    stroke="#666"
+                  />
+                  <YAxis stroke="#666" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(251, 146, 60, 0.2)', borderRadius: '8px' }}
+                    labelStyle={{ color: '#666' }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="earnings" 
+                    name="Έσοδα (€)" 
+                    stroke="#fb923c" 
+                    strokeWidth={2}
+                    dot={{ fill: '#fb923c' }}
+                    activeDot={{ r: 8 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="bookings" 
+                    name="Κρατήσεις" 
+                    stroke="#666" 
+                    strokeWidth={2}
+                    dot={{ fill: '#666' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-            <div className="text-2xl font-bold text-white mb-4">{newBookings.length} νέα/ες κράτηση/εις</div>
-            <Button onClick={() => setNewBookings([])} variant="outline" className="w-full bg-white hover:bg-gray-100 text-orange-500 border-none">
-              Εκκαθάριση Ειδοποιήσεων
-            </Button>
           </CardContent>
         </Card>
-      )}
 
-      <div>
-        
-        {todayBookings.length >= 0 ? renderCalendar() : (
-          <p className="text-gray-400">Δεν υπάρχουν κρατήσεις για σήμερα.</p>
-        )}
+        {/* Top Services */}
+        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300 flex-1">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-white flex items-center">
+              <TrendingUp className="mr-2 text-orange-500" />
+              Δημοφιλείς Υπηρεσίες
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {topServices.map((service, index) => (
+                <div key={service.service} className="flex items-center justify-between p-4 bg-black border border-orange-500/10 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <span className="text-orange-500 font-bold">#{index + 1}</span>
+                    </div>
+                    <span className="text-white">
+                      {service.service}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-gray-400">{service.count} κρατήσεις</span>
+                    <span className="text-orange-500 font-bold">
+                      {SERVICES_PRICING[service.service as keyof typeof SERVICES_PRICING] || 0}€
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Today's Schedule */}
+      <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-white flex items-center">
+            <Calendar className="mr-2 text-orange-500" />
+            Σημερινό Πρόγραμμα
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {todayBookings.map((booking) => (
+              <div key={booking.id} className="flex items-center justify-between p-4 bg-black border border-orange-500/10 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="flex flex-col">
+                    <span className="text-white font-bold">{booking.time.slice(0, 5)}</span>
+                    <span className="text-sm text-gray-400">{booking.service}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-white">{booking.fullname}</span>
+                    <a href={`tel:${booking.phonenumber}`} className="text-sm text-orange-500">
+                      {booking.phonenumber}
+                    </a>
+                  </div>
+                </div>
+                <Select
+                  value={booking.status}
+                  onValueChange={(value) => handleUpdateBookingStatus(booking.id!, value)}
+                >
+                  <SelectTrigger className="w-[180px] bg-black border-orange-500/20 text-white">
+                    <SelectValue placeholder="Ενημέρωση κατάστασης" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black text-white border-orange-500/20">
+                    <SelectItem value="pending" className="hover:bg-orange-500/10">Εκκρεμεί</SelectItem>
+                    <SelectItem value="done" className="hover:bg-orange-500/10">Ολοκληρώθηκε</SelectItem>
+                    <SelectItem value="cancelled" className="hover:bg-orange-500/10">Ακυρώθηκε</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+            {todayBookings.length === 0 && (
+              <div className="text-center text-gray-400 py-8">
+                Δεν υπάρχουν κρατήσεις για σήμερα
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <audio ref={audioRef} src="/notification-sound.wav" />
     </div>
