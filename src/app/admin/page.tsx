@@ -50,8 +50,6 @@ export default function ProtectedAdminDashboard() {
   const [todayBookings, setTodayBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [newBookings, setNewBookings] = useState<Booking[]>([])
-  const [monthlyEarnings, setMonthlyEarnings] = useState(0)
-  const [monthlyBookings, setMonthlyBookings] = useState<any[]>([])
   const [topServices, setTopServices] = useState<{service: string, count: number}[]>([])
   const [customerRetention, setCustomerRetention] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -68,7 +66,6 @@ export default function ProtectedAdminDashboard() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchDashboardData()
-      fetchMonthlyStats()
       fetchTopServices()
       calculateCustomerRetention()
       const subscription = supabase
@@ -87,51 +84,6 @@ export default function ProtectedAdminDashboard() {
       }
     }
   }, [isAuthenticated])
-
-  const fetchMonthlyStats = async () => {
-    const startDate = startOfMonth(new Date())
-    const endDate = endOfMonth(new Date())
-    
-    const { data: monthBookings, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .gte('date', format(startDate, 'yyyy-MM-dd'))
-      .lte('date', format(endDate, 'yyyy-MM-dd'))
-      .eq('status', 'done')
-
-    if (error) {
-      console.error('Error fetching monthly stats:', error)
-      return
-    }
-
-    // Create an array of all days in the month
-    const allDays = eachDayOfInterval({ start: startDate, end: endDate })
-    
-    // Initialize data for all days
-    const dailyStats = allDays.reduce((acc: any, date) => {
-      const dateStr = format(date, 'yyyy-MM-dd')
-      acc[dateStr] = { 
-        date: dateStr,
-        earnings: 0, 
-        bookings: 0,
-        formattedDate: format(date, 'd MMM', { locale: el })
-      }
-      return acc
-    }, {})
-
-    // Fill in actual booking data
-    monthBookings.forEach(booking => {
-      const date = booking.date
-      if (dailyStats[date]) {
-        dailyStats[date].bookings += 1
-        dailyStats[date].earnings += SERVICES_PRICING[booking.service as keyof typeof SERVICES_PRICING] || 0
-      }
-    })
-
-    const chartData = Object.values(dailyStats)
-    setMonthlyBookings(chartData)
-    setMonthlyEarnings(chartData.reduce((sum: number, day: any) => sum + day.earnings, 0))
-  }
 
   const fetchTopServices = async () => {
     const { data, error } = await supabase
@@ -262,7 +214,6 @@ export default function ProtectedAdminDashboard() {
       .eq('id', id)
     
     fetchDashboardData()
-    fetchMonthlyStats()
   }
 
   if (showPinInput) {
@@ -316,18 +267,7 @@ export default function ProtectedAdminDashboard() {
       <h1 className="text-3xl font-bold mb-8 text-white">Πίνακας Ελέγχου</h1>
       
       {/* Stats Overview */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <DollarSign className="text-orange-500 w-8 h-8" />
-              <span className="text-sm font-medium text-gray-400">Μηνιαία Έσοδα</span>
-            </div>
-            <div className="text-4xl font-bold text-white mb-2">{monthlyEarnings}€</div>
-            <div className="text-sm text-gray-500">Από ολοκληρωμένες κρατήσεις</div>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
         <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -368,89 +308,8 @@ export default function ProtectedAdminDashboard() {
         </Card>
       </div>
 
-      {/* Flex Container for Monthly Revenue and Top Services */}
-      <div className="flex flex-col lg:flex-row gap-8 mb-8">
-        {/* Monthly Revenue Chart */}
-        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300 flex-1">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-white flex items-center">
-              <BarChart3 className="mr-2 text-orange-500" />
-              Μηνιαία Επισκόπηση Εσόδων
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyBookings}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-                  <XAxis 
-                    dataKey="formattedDate" 
-                    stroke="#666"
-                  />
-                  <YAxis stroke="#666" />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(251, 146, 60, 0.2)', borderRadius: '8px' }}
-                    labelStyle={{ color: '#666' }}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="earnings" 
-                    name="Έσοδα (€)" 
-                    stroke="#fb923c" 
-                    strokeWidth={2}
-                    dot={{ fill: '#fb923c' }}
-                    activeDot={{ r: 8 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="bookings" 
-                    name="Κρατήσεις" 
-                    stroke="#666" 
-                    strokeWidth={2}
-                    dot={{ fill: '#666' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Services */}
-        <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300 flex-1">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-white flex items-center">
-              <TrendingUp className="mr-2 text-orange-500" />
-              Δημοφιλείς Υπηρεσίες
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topServices.map((service, index) => (
-                <div key={service.service} className="flex items-center justify-between p-4 bg-black border border-orange-500/10 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <span className="text-orange-500 font-bold">#{index + 1}</span>
-                    </div>
-                    <span className="text-white">
-                      {service.service}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-gray-400">{service.count} κρατήσεις</span>
-                    <span className="text-orange-500 font-bold">
-                      {SERVICES_PRICING[service.service as keyof typeof SERVICES_PRICING] || 0}€
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Today's Schedule */}
-      <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
+      <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300 mb-8">
         <CardHeader>
           <CardTitle className="text-xl font-bold text-white flex items-center">
             <Calendar className="mr-2 text-orange-500" />
@@ -493,6 +352,38 @@ export default function ProtectedAdminDashboard() {
                 Δεν υπάρχουν κρατήσεις για σήμερα
               </div>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Services */}
+      <Card className="bg-black border border-orange-500/20 shadow-lg hover:border-orange-500/40 transition-all duration-300">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-white flex items-center">
+            <TrendingUp className="mr-2 text-orange-500" />
+            Δημοφιλείς Υπηρεσίες
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {topServices.map((service, index) => (
+              <div key={service.service} className="flex items-center justify-between p-4 bg-black border border-orange-500/10 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                    <span className="text-orange-500 font-bold">#{index + 1}</span>
+                  </div>
+                  <span className="text-white">
+                    {service.service}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-400">{service.count} κρατήσεις</span>
+                  <span className="text-orange-500 font-bold">
+                    {SERVICES_PRICING[service.service as keyof typeof SERVICES_PRICING] || 0}€
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
