@@ -655,20 +655,27 @@ export default function BookingApp() {
 
             {selectedTime && (
               <div className="mb-6 glass-effect rounded-xl p-4 bg-[#101115] w-full">
-                <h3 className="text-md font-bold mb-2">Επιλογή Μπαρμπέρη</h3>
-                <Select onValueChange={setSelectedBarber} value={selectedBarber || undefined}> {/* Removed className from Select */}
-                  <SelectTrigger className="bg-[#101115] rounded-lg w-full"> {/* Background and rounded corners */}
-                    <SelectValue placeholder="Επιλέξτε μπαρμπέρη" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#101115] rounded-lg"> {/* Background for dropdown */}
-                    {availableBarbers.map((barber) => (
-                      <SelectItem key={barber} value={barber} className="flex items-center p-2 hover:bg-gray-800 rounded-lg"> {/* Adjusted layout */}
-                        <User className="mr-2 h-5 w-5 text-gray-400" /> {/* Man icon */}
-                        <span>{barber}</span> {/* Barber name in a span for better alignment */}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h3 className="text-md font-bold mb-4">Επιλογή Μπαρμπέρη</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {availableBarbers.map((barber) => {
+                    const isSelected = selectedBarber === barber;
+                    return (
+                      <button
+                        key={barber}
+                        onClick={() => setSelectedBarber(barber)}
+                        className={`flex flex-col items-center justify-center p-4 border rounded-lg transition-colors duration-200
+                          ${
+                            isSelected
+                              ? 'bg-[#E9570D] border-transparent text-black'
+                              : 'bg-[#1a1d20] border-gray-600 hover:bg-gray-800'
+                          }`}
+                      >
+                        <User className="h-6 w-6 mb-2 text-gray-400" />
+                        <span className="text-sm">{barber}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
