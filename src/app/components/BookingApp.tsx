@@ -666,8 +666,8 @@ export default function BookingApp() {
                         className={`flex flex-col items-center justify-center p-4 border rounded-lg transition-colors duration-200
                           ${
                             isSelected
-                              ? 'bg-[#E9570D] border-transparent text-black'
-                              : 'bg-[#1a1d20] border-gray-600 hover:bg-gray-800'
+                              ? 'bg-[#E9570D] border-transparent text-black font-bold'
+                              : 'bg-[#1a1d20] border-gray-600 hover:bg-gray-800 font-bold'
                           }`}
                       >
                         <User className="h-6 w-6 mb-2 text-gray-400" />
@@ -683,10 +683,13 @@ export default function BookingApp() {
               <h3 className="text-md font-bold mb-2">ΥΠΗΡΕΣΙΕΣ</h3>
               <div className="flex flex-wrap gap-2">
                 {services.map((service) => (
-                  <div key={service.name} className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-[#1a1d20] border border-gray-800 rounded-lg p-4"> {/* Lighter dark background and increased size */}
+                  <div
+                    key={service.name}
+                    className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-between bg-[#1a1d20] border border-gray-800 rounded-lg p-4"
+                  >
                     <label
                       htmlFor={service.name}
-                      className="text-sm  leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+                      className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
                     >
                       {service.name}
                       {service.name === 'Ξύρισμα' && (
@@ -704,9 +707,9 @@ export default function BookingApp() {
                         id={service.name}
                         checked={selectedServices.includes(service.name)}
                         onCheckedChange={() => toggleService(service.name)}
-                        className="h-8 w-8 bg-gray-800 data-[state=checked]:bg-gray-800" // Dark background for the toggle
+                        className="h-8 w-8 bg-gray-800 data-[state=checked]:bg-gray-800"
                       />
-                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-4 w-4 text-orange-400 pointer-events-none" /> {/* Orange scissors */}
+                      <Scissors className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-4 w-4 text-orange-400 pointer-events-none" />
                     </div>
                   </div>
                 ))}
@@ -783,12 +786,28 @@ export default function BookingApp() {
             ) : (
               <div className="flex flex-col items-center justify-center h-[400px] text-gray-400">
                 <Calendar className="w-16 h-16 mb-4 text-gray-600" />
-                <p className="text-center">Δεν βρέθηκαν κρατήσεις. Εισάγετε τον αριθμό τηλεφώνου σας για να δείτε τις κρατήσεις σας.</p>
+                <p className="text-center">Δεν βρέθηκαν κρατήσεις. Εισάγετε τον αριθμό τηλεφώνου σας για ν�� δείτε τις κρατήσεις σας.</p>
               </div>
             )}
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Enhanced Footer */}
+      <div className="text-center text-sm text-gray-400 mt-6 px-4 font-bold">
+        <p>
+          © {new Date().getFullYear()}{' '}
+          <a
+            href="https://resvly.gr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-[#E9570D]"
+          >
+            Resvly
+          </a>{' '}
+          | Made with skills and love <span className="text-red-500">❤️</span>
+        </p>
+      </div>
 
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
         <DialogContent className="bg-black text-white border border-gray-800 rounded-3xl p-0 overflow-hidden max-w-md">
