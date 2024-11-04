@@ -810,110 +810,109 @@ export default function BookingApp() {
       </div>
 
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
-        <DialogContent className="bg-black text-white border border-gray-800 rounded-3xl p-0 overflow-hidden max-w-md">
-          <div className="bg-gradient-to-b from-orange-400 to-orange-600 p-6 rounded-t-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-black">Ολοκληρώστε την Κράτησή σας</DialogTitle>
-              <DialogDescription className="text-black/80">
-                Παρακαλώ συμπληρώστε τα στοιχεία σας για να επιβεβαιώσετε το ραντεβού σας.
-              </DialogDescription>
-            </DialogHeader>
+  <DialogContent className="bg-black text-white border border-gray-800 rounded-3xl p-0 overflow-hidden max-w-md">
+    <div className="bg-gradient-to-b from-orange-400 to-orange-600 p-4 rounded-t-3xl"> {/* Reduced padding from p-6 to p-4 */}
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold text-black">Ολοκληρώστε την Κράτησή σας</DialogTitle> {/* Reduced text size */}
+        <DialogDescription className="text-sm text-black/80"> {/* Added text-sm */}
+          Παρακαλώ συμπληρώστε τα στοιχεία σας για να επιβεβαιώσετε το ραντεβού σας.
+        </DialogDescription>
+      </DialogHeader>
+    </div>
+    <form onSubmit={handleBookingSubmit} className="p-4 space-y-4"> {/* Reduced padding and spacing */}
+      <div className="space-y-3"> {/* Reduced spacing */}
+        <div className="flex flex-row space-x-2"> {/* Name and Phone in same row */}
+          <div className="relative flex-1">
+            <Label htmlFor="name" className="sr-only">Ονοματεπώνυμο</Label>
+            <Input
+              id="name"
+              className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
+              placeholder="Ονοματεπώνυμο"
+              value={bookingDetails.fullName}
+              onChange={(e) => handleInputChange('fullName', e.target.value)}
+              required
+            />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
-          <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
-            <div className="space-y-4">
-              <div className="relative">
-                <Label htmlFor="name" className="sr-only">Ονοματεπώνυμο</Label>
-                <Input
-                  id="name"
-                  className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                  placeholder="Ονοματεπώνυμο"
-                  value={bookingDetails.fullName}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  required
-                />
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="relative flex-1">
-                  <Label htmlFor="phone" className="sr-only">Αριθμός Τηλεφώνου</Label>
-                  <Input
-                    id="phone"
-                    className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                    placeholder="Τηλέφωνο (69...)"
-                    value={bookingDetails.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    required
-                  />
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                </div>
-                <div className="relative flex-1">
-                  <Label htmlFor="email" className="sr-only">Διεύθυνση Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                    placeholder="Email"
-                    value={bookingDetails.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    required
-                  />
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                </div>
-              </div>
-              {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
-            <div className="bg-gray-900 p-4 rounded-xl space-y-2">
-              <h4 className="font-semibold text-lg mb-2">Λεπτομέρειες Κράτησης</h4>
-              <div className="flex items-center">
-                <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                <span>{selectedDate?.toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              </div>
-              <div className="flex items-center">
-                <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                <span>{selectedTime} - {calculateEndTime(selectedTime || '')}</span>
-              </div>
-              <div className="flex items-center">
-                <Scissors className="mr-2 h-4 w-4 text-gray-400" />
-                <span>{selectedServices.join(', ')}</span>
-              </div>
-              <div className="flex items-center">
-                <User className="mr-2 h-4 w-4 text-gray-400" />
-                <span>Μπαρμπέρης: {selectedBarber}</span>
-              </div>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
-                <span className="font-semibold">Σύνολο:</span>
-                <span className="font-semibold text-orange-400">{calculateTotalPrice()}€</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="mathChallenge" className="text-sm font-medium text-gray-400">
-                Παρακαλώ λύστε αυτό το απλό μαθηματικό πρόβλημα:
-              </Label>
-              <div className="flex items-center space-x-2">
-                <span>{mathChallenge.num1} + {mathChallenge.num2} =</span>
-                <Input
-                  id="mathChallenge"
-                  type="number"
-                  className="w-20 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
-                  value={mathChallenge.answer}
-                  onChange={(e) => setMathChallenge({...mathChallenge, answer: e.target.value})}
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                type="submit" 
-                className="w-full bg-orange-400 text-black hover:bg-orange-500 rounded-xl" 
-                disabled={isLoading}
-              >
-                {isLoading ? 'Επεξεργασία...' : 'Επιβεβαίωση Κράτησης'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          <div className="relative flex-1">
+            <Label htmlFor="phone" className="sr-only">Αριθμός Τηλεφώνου</Label>
+            <Input
+              id="phone"
+              className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
+              placeholder="Τηλέφωνο (69...)"
+              value={bookingDetails.phoneNumber}
+              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+              required
+            />
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          </div>
+        </div>
+        <div className="relative">
+          <Label htmlFor="email" className="sr-only">Διεύθυνση Email</Label>
+          <Input
+            id="email"
+            type="email"
+            className="pl-10 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400 w-full"
+            placeholder="Email"
+            value={bookingDetails.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            required
+          />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+        </div>
+        {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
+        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+      </div>
+      <div className="bg-gray-900 p-3 rounded-xl space-y-1.5"> {/* Reduced padding and spacing */}
+        <h4 className="font-semibold text-base mb-2">Λεπτομέρειες Κράτησης</h4>
+        <div className="flex items-center text-sm">
+          <Calendar className="mr-2 h-4 w-4 text-gray-400" />
+          <span>{selectedDate?.toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+        </div>
+        <div className="flex items-center text-sm">
+          <Clock className="mr-2 h-4 w-4 text-gray-400" />
+          <span>{selectedTime} - {calculateEndTime(selectedTime || '')}</span>
+        </div>
+        <div className="flex items-center text-sm">
+          <Scissors className="mr-2 h-4 w-4 text-gray-400" />
+          <span>{selectedServices.join(', ')}</span>
+        </div>
+        <div className="flex items-center text-sm">
+          <User className="mr-2 h-4 w-4 text-gray-400" />
+          <span>Μπαρμπέρης: {selectedBarber}</span>
+        </div>
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
+          <span className="font-semibold">Σύνολο:</span>
+          <span className="font-semibold text-orange-400">{calculateTotalPrice()}€</span>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="mathChallenge" className="text-xs font-medium text-gray-400">
+          Παρακαλώ λύστε αυτό το απλό μαθηματικό πρόβλημα:
+        </Label>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm">{mathChallenge.num1} + {mathChallenge.num2} =</span>
+          <Input
+            id="mathChallenge"
+            type="number"
+            className="w-20 bg-gray-900 border-gray-700 rounded-xl focus:ring-orange-400 focus:border-orange-400"
+            value={mathChallenge.answer}
+            onChange={(e) => setMathChallenge({...mathChallenge, answer: e.target.value})}
+            required
+          />
+        </div>
+      </div>
+      <Button 
+        type="submit" 
+        className="w-full bg-orange-400 text-black hover:bg-orange-500 rounded-xl mt-2" 
+        disabled={isLoading}
+      >
+        {isLoading ? 'Επεξεργασία...' : 'Επιβεβαίωση Κράτησης'}
+      </Button>
+    </form>
+  </DialogContent>
+</Dialog>
+
 
       <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
         <DialogContent className="bg-black text-white border border-gray-800 rounded-3xl p-0 overflow-hidden max-w-md">
