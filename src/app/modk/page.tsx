@@ -40,7 +40,7 @@ const SERVICES_PRICING: { [key: string]: number } = {
   'Κούρεμα Ανδρικό Shaver με περιποίηση γενειάδας': 16,
 }
 
-const PIN = '1234'
+const PIN = '1005'
 
 export default function ProtectedAdminDashboard() {
   const [pinInput, setPinInput] = useState<string[]>([])
