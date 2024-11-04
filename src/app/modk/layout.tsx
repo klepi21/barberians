@@ -11,10 +11,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   const menuItems = [
-    { href: "/admin", label: "Πίνακας Ελέγχου" },
-    { href: "/admin/bookings", label: "Κρατήσεις" },
-    { href: "/admin/hours", label: "Ώρες Εργασίας" },
-    { href: "/admin/new-booking", label: "Νέα Κράτηση" },
+    { href: "/modk", label: "Πίνακας Ελέγχου" },
+    { href: "/modk/bookings", label: "Κρατήσεις" },
+    { href: "/modk/hours", label: "Ώρες Εργασίας" },
+    { href: "/modk/new-booking", label: "Νέα Κράτηση" },
   ]
 
   return (
