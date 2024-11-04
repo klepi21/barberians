@@ -302,7 +302,7 @@ export default function ProtectedAdminDashboard() {
               variant="outline" 
               className="w-full bg-black border border-orange-500/20 text-white hover:bg-orange-500/10"
             >
-              <Link href="/admin/bookings">Προβολή Προγράμματος</Link>
+              <Link href="/modk/bookings">Προβολή Προγράμματος</Link>
             </Button>
           </CardContent>
         </Card>
