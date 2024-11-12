@@ -786,7 +786,7 @@ export default function BookingApp() {
             ) : (
               <div className="flex flex-col items-center justify-center h-[400px] text-gray-400">
                 <Calendar className="w-16 h-16 mb-4 text-gray-600" />
-                <p className="text-center">Δεν βρέθηκαν κρατήσεις. Εισάγετε τον αριθμό τηλεφώνου σας για ν�� δείτε τις κρατήσεις σας.</p>
+                <p className="text-center">Δεν βρέθηκαν κρατήσεις. Εισάγετε τον αριθμό τηλεφώνου σας για να δείτε τις κρατήσεις σας.</p>
               </div>
             )}
           </div>
@@ -940,27 +940,6 @@ export default function BookingApp() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {isPopupVisible && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-75" />
-          <div className="relative bg-white p-8 rounded-lg text-center w-96"> {/* Increased size */}
-            <div className="absolute inset-0">
-              <Image
-                src={cover.src}
-                alt="Vacation Notice"
-                layout="fill"
-                objectFit="cover"
-                className="blur-sm"
-              />
-            </div>
-            <h2 className="text-2xl font-bold relative z-10">Ειδοποίηση</h2> {/* Bolder font */}
-            <p className="relative z-10 text-lg font-bold">Θα είμαστε κλειστά στις 6 , 7, 8 και 9 Νοεμβρίου.</p> {/* Bolder font */}
-            <p className="relative z-10 text-lg font-bold">Κλείνει σε {countdown} δευτερόλεπτα...</p> {/* Bolder font */}
-            <button onClick={handleClosePopup} className="absolute top-2 right-2 text-red-500 relative z-10">X</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
